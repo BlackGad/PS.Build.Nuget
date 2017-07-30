@@ -36,8 +36,8 @@ namespace PS.Build.Nuget.Attributes
             try
             {
                 logger.Debug("Defining nuget package owners");
-                var package = provider.GetService<IDynamicVault>().GetVaultPackage(_id);
-                package.Metadata.Owners = package.Metadata.Owners ?? new List<string>();
+                var package = provider.GetVaultPackage(_id);
+                package.Metadata.Owners = package.Metadata.Owners as List<string> ?? new List<string>();
 
                 var owners = (ICollection<string>)package.Metadata.Owners;
                 foreach (var owner in _owners)

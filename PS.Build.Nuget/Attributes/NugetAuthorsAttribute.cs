@@ -36,8 +36,8 @@ namespace PS.Build.Nuget.Attributes
             try
             {
                 logger.Debug("Defining nuget package authors");
-                var package = provider.GetService<IDynamicVault>().GetVaultPackage(_id);
-                package.Metadata.Authors = package.Metadata.Authors ?? new List<string>();
+                var package = provider.GetVaultPackage(_id);
+                package.Metadata.Authors = package.Metadata.Authors as List<string> ?? new List<string>();
 
                 var authors = (ICollection<string>)package.Metadata.Authors;
                 foreach (var author in _authors)

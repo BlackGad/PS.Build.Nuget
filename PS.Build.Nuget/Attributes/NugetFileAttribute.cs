@@ -20,8 +20,8 @@ namespace PS.Build.Nuget.Attributes
 
         public NugetFileAttribute(string id, string source, string destination, string exclude = null)
         {
-            if (source == null) throw new ArgumentNullException("source");
-            if (destination == null) throw new ArgumentNullException("destination");
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (destination == null) throw new ArgumentNullException(nameof(destination));
             if (string.IsNullOrWhiteSpace(id)) throw new ArgumentException("Invalid id");
             _id = id;
             _source = source;
@@ -40,8 +40,13 @@ namespace PS.Build.Nuget.Attributes
             try
             {
                 logger.Debug("Defining nuget package file");
-                var package = provider.GetService<IDynamicVault>().GetVaultPackage(_id);
-                package.Files.Add(new NugetPackageFiles(_source, _destination, _exclude));
+                var package = provider.GetVaultPackage(_id);
+                var resolver = provider.GetService<IMacroResolver>();
+                var exclude = _exclude;
+                if (exclude != null) exclude = resolver.Resolve(exclude);
+                package.Files.Add(new NugetPackageFiles(resolver.Resolve(_source),
+                                                        resolver.Resolve(_destination),
+                                                        exclude));
             }
             catch (Exception e)
             {

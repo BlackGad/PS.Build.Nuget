@@ -16,6 +16,30 @@ namespace PS.Build.Nuget.Attributes
     [Designer("PS.Build.Adaptation")]
     public sealed class NugetPackageDependencyAttribute : Attribute
     {
+        #region Static members
+
+        internal static void AddDependency(ManifestMetadata metadata, string dependencyID, string versionRange, NuGetFramework framework)
+        {
+            metadata.DependencyGroups = metadata.DependencyGroups ?? new List<PackageDependencyGroup>();
+
+            var dependencyGroups = (ICollection<PackageDependencyGroup>)metadata.DependencyGroups;
+            framework = framework ?? NuGetFramework.AnyFramework;
+
+            var group = dependencyGroups.FirstOrDefault(g => g.TargetFramework.Equals(framework));
+            if (@group == null)
+            {
+                @group = new PackageDependencyGroup(framework, new List<PackageDependency>());
+                dependencyGroups.Add(@group);
+            }
+
+            var groupPackages = (ICollection<PackageDependency>)@group.Packages;
+            var nugetVersionRange = VersionRange.All;
+            if (versionRange != null) nugetVersionRange = VersionRange.Parse(versionRange);
+            groupPackages.Add(new PackageDependency(dependencyID, nugetVersionRange));
+        }
+
+        #endregion
+
         private readonly string _dependencyID;
         private readonly string _framework;
         private readonly string _id;
@@ -45,24 +69,10 @@ namespace PS.Build.Nuget.Attributes
             {
                 logger.Debug("Defining nuget package dependency");
 
-                var package = provider.GetService<IDynamicVault>().GetVaultPackage(_id);
-                package.Metadata.DependencyGroups = package.Metadata.DependencyGroups ?? new List<PackageDependencyGroup>();
-
-                var dependencyGroups = (ICollection<PackageDependencyGroup>)package.Metadata.DependencyGroups;
-                var targetFramework = NuGetFramework.AnyFramework;
-                if (_framework != null) targetFramework = NuGetFramework.Parse(_framework);
-
-                var group = dependencyGroups.FirstOrDefault(g => g.TargetFramework.Equals(targetFramework));
-                if (group == null)
-                {
-                    group = new PackageDependencyGroup(targetFramework, new List<PackageDependency>());
-                    dependencyGroups.Add(group);
-                }
-
-                var groupPackages = (ICollection<PackageDependency>)group.Packages;
-                var versionRange = VersionRange.All;
-                if (_versionRange != null) versionRange = VersionRange.Parse(_versionRange);
-                groupPackages.Add(new PackageDependency(_dependencyID, versionRange));
+                var package = provider.GetVaultPackage(_id);
+                var framework = NuGetFramework.AnyFramework;
+                if (!string.IsNullOrWhiteSpace(_framework)) framework = NuGetFramework.Parse(_framework);
+                AddDependency(package.Metadata, _dependencyID, _versionRange, framework);
             }
             catch (Exception e)
             {

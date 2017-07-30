@@ -42,7 +42,7 @@ namespace PS.Build.Nuget.Attributes
             {
                 logger.Debug("Defining nuget package framework assembly");
 
-                var package = provider.GetService<IDynamicVault>().GetVaultPackage(_id);
+                var package = provider.GetVaultPackage(_id);
                 package.Metadata.FrameworkReferences = package.Metadata.FrameworkReferences ?? new List<FrameworkAssemblyReference>();
 
                 var frameworkReferences = (ICollection<FrameworkAssemblyReference>)package.Metadata.FrameworkReferences;

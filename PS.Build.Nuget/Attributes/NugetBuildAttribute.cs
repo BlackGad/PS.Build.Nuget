@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ComponentModel;
 using System.IO;
+using System.Linq;
 using NuGet.Packaging;
 using PS.Build.Extensions;
 using PS.Build.Nuget.Extensions;
@@ -32,7 +33,7 @@ namespace PS.Build.Nuget.Attributes
         private void PostBuild(IServiceProvider provider)
         {
             var logger = provider.GetService<ILogger>();
-            var package = provider.GetService<IDynamicVault>().GetVaultPackage(_id);
+            var package = provider.GetVaultPackage(_id);
             var targetDirectory = string.IsNullOrWhiteSpace(_targetDirectory)
                 ? provider.GetService<IExplorer>().Directories[BuildDirectory.Target]
                 : _targetDirectory;
@@ -51,7 +52,7 @@ namespace PS.Build.Nuget.Attributes
                     build.AddFiles(targetDirectory, file.Source, file.Destination, file.Exclude);
                 }
 
-                var finalPath = Path.Combine(targetDirectory, package.Metadata.Id, package.Metadata.Version + ".nupkg");
+                var finalPath = Path.Combine(targetDirectory, package.Metadata.Id + "." + package.Metadata.Version + ".nupkg");
 
                 using (var stream = File.OpenWrite(finalPath))
                 {

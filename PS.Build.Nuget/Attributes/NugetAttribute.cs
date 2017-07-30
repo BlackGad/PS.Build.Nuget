@@ -1,5 +1,10 @@
 using System;
 using System.ComponentModel;
+using System.Diagnostics;
+using System.Linq;
+using System.Reflection;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using NuGet.Versioning;
 using PS.Build.Extensions;
 using PS.Build.Nuget.Extensions;
@@ -52,7 +57,7 @@ namespace PS.Build.Nuget.Attributes
             try
             {
                 logger.Debug("Defining nuget package properties");
-                var package = provider.GetService<IDynamicVault>().GetVaultPackage(_id);
+                var package = provider.GetVaultPackage(_id);
 
                 if (Copyright != null) package.Metadata.Copyright = Copyright;
                 if (Description != null) package.Metadata.Description = Description;
@@ -77,23 +82,5 @@ namespace PS.Build.Nuget.Attributes
         }
 
         #endregion
-
-        /*
-    /// <summary>
-    /// Specifies assemblies from GAC that the package depends on.
-    /// </summary>
-    IEnumerable<FrameworkAssemblyReference> FrameworkReferences { get; }
-
-    /// <summary>Returns sets of References specified in the manifest.</summary>
-    IEnumerable<PackageReferenceSet> PackageAssemblyReferences { get; }
-
-    /// <summary>
-    /// Specifies sets other packages that the package depends on.
-    /// </summary>
-    IEnumerable<PackageDependencyGroup> DependencyGroups { get; }
-
-
-    IEnumerable<PackageType> PackageTypes { get; }
-    */
     }
 }
