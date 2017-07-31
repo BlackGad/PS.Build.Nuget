@@ -1,12 +1,8 @@
 using System;
 using System.ComponentModel;
-using System.Diagnostics;
-using System.Linq;
-using System.Reflection;
-using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 using NuGet.Versioning;
 using PS.Build.Extensions;
+using PS.Build.Nuget.Attributes.Base;
 using PS.Build.Nuget.Extensions;
 using PS.Build.Services;
 
@@ -14,26 +10,15 @@ namespace PS.Build.Nuget.Attributes
 {
     [AttributeUsage(AttributeTargets.Assembly, AllowMultiple = true)]
     [Designer("PS.Build.Adaptation")]
-    public sealed class NugetAttribute : Attribute
+    public sealed class NugetAttribute : BaseNugetAttribute
     {
-        private readonly string _id;
-
-        #region Constructors
-
-        public NugetAttribute(string id)
-        {
-            if (string.IsNullOrWhiteSpace(id)) throw new ArgumentException("Invalid id");
-            _id = id;
-        }
-
-        #endregion
-
         #region Properties
 
         public string Copyright { get; set; }
         public string Description { get; set; }
         public bool? DevelopmentDependency { get; set; }
         public string IconUrl { get; set; }
+
         public string Language { get; set; }
         public string LicenseUrl { get; set; }
         public string MinClientVersion { get; set; }
@@ -57,7 +42,7 @@ namespace PS.Build.Nuget.Attributes
             try
             {
                 logger.Debug("Defining nuget package properties");
-                var package = provider.GetVaultPackage(_id);
+                var package = provider.GetVaultPackage(ID);
 
                 if (Copyright != null) package.Metadata.Copyright = Copyright;
                 if (Description != null) package.Metadata.Description = Description;

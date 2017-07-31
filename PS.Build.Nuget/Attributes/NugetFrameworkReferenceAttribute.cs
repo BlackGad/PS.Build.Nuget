@@ -5,6 +5,7 @@ using System.Linq;
 using NuGet.Frameworks;
 using NuGet.Packaging;
 using PS.Build.Extensions;
+using PS.Build.Nuget.Attributes.Base;
 using PS.Build.Nuget.Extensions;
 using PS.Build.Services;
 
@@ -12,20 +13,17 @@ namespace PS.Build.Nuget.Attributes
 {
     [AttributeUsage(AttributeTargets.Assembly, AllowMultiple = true)]
     [Designer("PS.Build.Adaptation")]
-    public sealed class NugetFrameworkReferenceAttribute : Attribute
+    public sealed class NugetFrameworkReferenceAttribute : BaseNugetAttribute
     {
         private readonly string _assembly;
         private readonly string[] _frameworks;
-        private readonly string _id;
 
         #region Constructors
 
-        public NugetFrameworkReferenceAttribute(string id, string assembly, params string[] frameworks)
+        public NugetFrameworkReferenceAttribute(string assembly, params string[] frameworks)
         {
             if (assembly == null) throw new ArgumentNullException("assembly");
             if (frameworks == null) throw new ArgumentNullException("frameworks");
-            if (string.IsNullOrWhiteSpace(id)) throw new ArgumentException("Invalid id");
-            _id = id;
             _assembly = assembly;
             _frameworks = frameworks;
         }
@@ -42,7 +40,7 @@ namespace PS.Build.Nuget.Attributes
             {
                 logger.Debug("Defining nuget package framework assembly");
 
-                var package = provider.GetVaultPackage(_id);
+                var package = provider.GetVaultPackage(ID);
                 package.Metadata.FrameworkReferences = package.Metadata.FrameworkReferences ?? new List<FrameworkAssemblyReference>();
 
                 var frameworkReferences = (ICollection<FrameworkAssemblyReference>)package.Metadata.FrameworkReferences;

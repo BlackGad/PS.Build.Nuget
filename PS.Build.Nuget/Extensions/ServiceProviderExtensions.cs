@@ -1,14 +1,12 @@
 ﻿using System;
-using System.Diagnostics;
-using System.IO;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Xml.Linq;
 using NuGet.Frameworks;
 using NuGet.Packaging;
+using NuGet.Packaging.Core;
 using NuGet.Versioning;
 using PS.Build.Extensions;
-using PS.Build.Nuget.Attributes;
 using PS.Build.Nuget.Types;
 using PS.Build.Services;
 using PS.Build.Types;
@@ -19,14 +17,52 @@ namespace PS.Build.Nuget.Extensions
     {
         #region Static members
 
+        internal static void AddAuthor(this ManifestMetadata metadata, string name)
+        {
+            metadata.Authors = metadata.Authors as List<string> ?? new List<string>();
+
+            var collection = (ICollection<string>)metadata.Authors;
+            collection.Add(name);
+        }
+
+        internal static void AddDependency(this ManifestMetadata metadata, string dependencyID, string versionRange, NuGetFramework framework)
+        {
+            metadata.DependencyGroups = metadata.DependencyGroups ?? new List<PackageDependencyGroup>();
+
+            var dependencyGroups = (ICollection<PackageDependencyGroup>)metadata.DependencyGroups;
+            framework = framework ?? NuGetFramework.AnyFramework;
+
+            var group = dependencyGroups.FirstOrDefault(g => g.TargetFramework.Equals(framework));
+            if (@group == null)
+            {
+                @group = new PackageDependencyGroup(framework, new List<PackageDependency>());
+                dependencyGroups.Add(@group);
+            }
+
+            var groupPackages = (ICollection<PackageDependency>)@group.Packages;
+            var nugetVersionRange = VersionRange.All;
+            if (versionRange != null) nugetVersionRange = VersionRange.Parse(versionRange);
+            groupPackages.Add(new PackageDependency(dependencyID, nugetVersionRange));
+        }
+
+        internal static void AddOwner(this ManifestMetadata metadata, string name)
+        {
+            metadata.Owners = metadata.Owners as List<string> ?? new List<string>();
+
+            var collection = (ICollection<string>)metadata.Owners;
+            collection.Add(name);
+        }
+
         internal static NugetPackage GetVaultPackage(this IServiceProvider provider, string id)
         {
             if (provider == null) throw new ArgumentNullException(nameof(provider));
+            if (string.IsNullOrWhiteSpace(id)) id = provider.GetService<IExplorer>().Properties[BuildProperty.TargetName];
+
             var vault = provider.GetService<IDynamicVault>();
             if (vault == null) throw new ArgumentNullException(nameof(vault));
+
             vault.Query(() => new NugetEnvironment(provider));
-            
-            if (string.IsNullOrWhiteSpace(id)) throw new ArgumentException("Invalid id");
+
             id = id.ToLowerInvariant();
             return vault.Query(id, () => CreateInitialPackage(provider, id));
         }
@@ -37,11 +73,11 @@ namespace PS.Build.Nuget.Extensions
             var explorer = provider.GetService<IExplorer>();
             var logger = provider.GetService<ILogger>();
 
-            logger.Debug("Creating intial '" + id + "' package record");
+            logger.Debug($"Creating initial '{id}' package record");
 
             var metadata = new ManifestMetadata
             {
-                Id = id,
+                Id = id
             };
 
             var versionAttribute = compilation.Assembly.GetAttribute<AssemblyVersionAttribute>();
@@ -66,6 +102,7 @@ namespace PS.Build.Nuget.Extensions
             {
                 logger.Debug(" Assembly company attribute is: " + companyAttribute.Company);
                 metadata.Owners = new[] { companyAttribute.Company };
+                metadata.Authors = new[] { companyAttribute.Company };
                 logger.Debug(" + Nuget package owner: " + companyAttribute.Company);
             }
             else logger.Debug(" Assembly company attribute is empty or not defined");
@@ -106,64 +143,7 @@ namespace PS.Build.Nuget.Extensions
             }
             else logger.Debug(" Assembly culture attribute is empty or not defined");
 
-            var packagesConfig = explorer.Items[BuildItem.None]
-                .FirstOrDefault(i => string.Equals(i.Identity,
-                                                   "packages.config",
-                                                   StringComparison.InvariantCultureIgnoreCase));
-
-            if (packagesConfig != null && File.Exists(packagesConfig.FullPath))
-            {
-                try
-                {
-                    logger.Debug(" Reading...");
-                    var configReader = new PackagesConfigReader(XDocument.Parse(File.ReadAllText(packagesConfig.FullPath)));
-                    var dependencies = configReader.GetPackages(false);
-                    foreach (var dependency in dependencies)
-                    {
-                        if (!dependency.IsUserInstalled)
-                        {
-                            logger.Debug(
-                                $" - Dependency '{dependency.PackageIdentity.Id}' installed automatically as dependecy for another package. Skipping.");
-                            continue;
-                        }
-                        if (dependency.PackageIdentity.Id.StartsWith("PS.Build"))
-                        {
-                            logger.Debug($" - Dependency '{dependency.PackageIdentity.Id}' id starts from 'PS.Build'. Skipping.");
-                            continue;
-                        }
-
-                        var versionRange = dependency.PackageIdentity.HasVersion ? dependency.PackageIdentity.Version.ToString() : null;
-                        if (dependency.HasAllowedVersions) versionRange = dependency.AllowedVersions.ToString();
-                        NugetPackageDependencyAttribute.AddDependency(metadata,
-                                                                      dependency.PackageIdentity.Id,
-                                                                      versionRange,
-                                                                      NuGetFramework.AnyFramework);
-                        logger.Debug($" + Nuget dependency '{dependency.PackageIdentity.Id}' added.");
-                    }
-                }
-                catch (Exception e)
-                {
-                    logger.Debug(" Configuration file packages.config parse error. Details: " + e.GetBaseException().Message);
-                }
-            }
-            else logger.Debug(" Configuration file packages.config not found");
-
-            var result = new NugetPackage(metadata);
-
-            var targetFrameworkVersionString = explorer.Properties[BuildProperty.TargetFrameworkVersion]?.Replace("v", string.Empty);
-            Version targetFrameworkVersion;
-            if (!Version.TryParse(targetFrameworkVersionString, out targetFrameworkVersion))
-            {
-                logger.Debug(" Target framework version is invalid");
-            }
-            else
-            {
-                var targetOutput = explorer.Properties[BuildProperty.TargetPath];
-                var nugetFramework = new NuGetFramework(FrameworkConstants.FrameworkIdentifiers.Net, targetFrameworkVersion);
-                result.Files.Add(new NugetPackageFiles(targetOutput, Path.Combine("lib", nugetFramework.GetShortFolderName())));
-            }
-
-            return result;
+            return new NugetPackage(metadata);
         }
 
         #endregion

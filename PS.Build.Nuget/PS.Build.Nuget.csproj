@@ -83,8 +83,8 @@
       <HintPath>..\packages\NuGet.Versioning.4.3.0-beta1-2418\lib\net45\NuGet.Versioning.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="PS.Build, Version=1.15.9.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\PS.Build.1.15.9\lib\net452\PS.Build.dll</HintPath>
+    <Reference Include="PS.Build, Version=1.15.10.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\PS.Build.1.15.10\lib\net452\PS.Build.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="System" />
@@ -180,12 +180,15 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Attributes\Base\BaseNugetAttribute.cs" />
     <Compile Include="Attributes\NugetBuildAttribute.cs" />
     <Compile Include="Attributes\NugetAttribute.cs" />
-    <Compile Include="Attributes\NugetAuthorsAttribute.cs" />
-    <Compile Include="Attributes\NugetFileAttribute.cs" />
+    <Compile Include="Attributes\NugetAuthorAttribute.cs" />
+    <Compile Include="Attributes\NugetFilesAttribute.cs" />
+    <Compile Include="Attributes\NugetFilesFromTargetAttribute.cs" />
     <Compile Include="Attributes\NugetFrameworkReferenceAttribute.cs" />
-    <Compile Include="Attributes\NugetOwnersAttribute.cs" />
+    <Compile Include="Attributes\NugetOwnerAttribute.cs" />
+    <Compile Include="Attributes\NugetPackageDependenciesFromConfigurationAttribute.cs" />
     <Compile Include="Attributes\NugetPackageDependencyAttribute.cs" />
     <Compile Include="Extensions\RoslynExtensions.cs" />
     <Compile Include="Extensions\ServiceProviderExtensions.cs" />

@@ -1,9 +1,9 @@
 ﻿using System;
 using System.ComponentModel;
 using System.IO;
-using System.Linq;
 using NuGet.Packaging;
 using PS.Build.Extensions;
+using PS.Build.Nuget.Attributes.Base;
 using PS.Build.Nuget.Extensions;
 using PS.Build.Services;
 using PS.Build.Types;
@@ -12,17 +12,14 @@ namespace PS.Build.Nuget.Attributes
 {
     [AttributeUsage(AttributeTargets.Assembly, AllowMultiple = true)]
     [Designer("PS.Build.Adaptation")]
-    public sealed class NugetBuildAttribute : Attribute
+    public sealed class NugetBuildAttribute : BaseNugetAttribute
     {
-        private readonly string _id;
         private readonly string _targetDirectory;
 
         #region Constructors
-
-        public NugetBuildAttribute(string id, string targetDirectory = null)
+        
+        public NugetBuildAttribute(string targetDirectory = null)
         {
-            if (string.IsNullOrWhiteSpace(id)) throw new ArgumentException("Invalid id");
-            _id = id;
             _targetDirectory = targetDirectory;
         }
 
@@ -33,7 +30,7 @@ namespace PS.Build.Nuget.Attributes
         private void PostBuild(IServiceProvider provider)
         {
             var logger = provider.GetService<ILogger>();
-            var package = provider.GetVaultPackage(_id);
+            var package = provider.GetVaultPackage(ID);
             var targetDirectory = string.IsNullOrWhiteSpace(_targetDirectory)
                 ? provider.GetService<IExplorer>().Directories[BuildDirectory.Target]
                 : _targetDirectory;
@@ -53,13 +50,14 @@ namespace PS.Build.Nuget.Attributes
                 }
 
                 var finalPath = Path.Combine(targetDirectory, package.Metadata.Id + "." + package.Metadata.Version + ".nupkg");
+                if (File.Exists(finalPath)) File.Delete(finalPath);
 
                 using (var stream = File.OpenWrite(finalPath))
                 {
                     logger.Debug("Building...");
                     build.Save(stream);
                 }
-                logger.Info("Package successfuly created");
+                logger.Info("Package successfully created");
             }
             catch (Exception e)
             {

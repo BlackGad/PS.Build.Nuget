@@ -1,6 +1,7 @@
 using System;
 using System.ComponentModel;
 using PS.Build.Extensions;
+using PS.Build.Nuget.Attributes.Base;
 using PS.Build.Nuget.Extensions;
 using PS.Build.Nuget.Types;
 using PS.Build.Services;
@@ -9,21 +10,18 @@ namespace PS.Build.Nuget.Attributes
 {
     [AttributeUsage(AttributeTargets.Assembly, AllowMultiple = true)]
     [Designer("PS.Build.Adaptation")]
-    public sealed class NugetFileAttribute : Attribute
+    public sealed class NugetFilesAttribute : BaseNugetAttribute
     {
         private readonly string _destination;
         private readonly string _exclude;
-        private readonly string _id;
         private readonly string _source;
 
         #region Constructors
 
-        public NugetFileAttribute(string id, string source, string destination, string exclude = null)
+        public NugetFilesAttribute(string source, string destination, string exclude = null)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (destination == null) throw new ArgumentNullException(nameof(destination));
-            if (string.IsNullOrWhiteSpace(id)) throw new ArgumentException("Invalid id");
-            _id = id;
             _source = source;
             _destination = destination;
             _exclude = exclude;
@@ -40,7 +38,7 @@ namespace PS.Build.Nuget.Attributes
             try
             {
                 logger.Debug("Defining nuget package file");
-                var package = provider.GetVaultPackage(_id);
+                var package = provider.GetVaultPackage(ID);
                 var resolver = provider.GetService<IMacroResolver>();
                 var exclude = _exclude;
                 if (exclude != null) exclude = resolver.Resolve(exclude);
