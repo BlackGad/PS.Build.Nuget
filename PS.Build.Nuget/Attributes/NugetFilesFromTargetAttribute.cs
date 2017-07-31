@@ -52,7 +52,7 @@ namespace PS.Build.Nuget.Attributes
 
                 foreach (var file in files)
                 {
-                    package.Files.Add(new NugetPackageFiles(file, destinationDirectory));
+                    package.IncludeFiles.Add(new NugetPackageFiles(file, destinationDirectory));
                 }
             }
             catch (Exception e)

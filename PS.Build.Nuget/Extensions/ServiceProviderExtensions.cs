@@ -25,12 +25,12 @@ namespace PS.Build.Nuget.Extensions
             collection.Add(name);
         }
 
-        internal static void AddDependency(this ManifestMetadata metadata, string dependencyID, string versionRange, NuGetFramework framework)
+        internal static void AddDependency(this ManifestMetadata metadata, PackageReference reference)
         {
             metadata.DependencyGroups = metadata.DependencyGroups ?? new List<PackageDependencyGroup>();
 
             var dependencyGroups = (ICollection<PackageDependencyGroup>)metadata.DependencyGroups;
-            framework = framework ?? NuGetFramework.AnyFramework;
+            var framework = reference.TargetFramework ?? NuGetFramework.AnyFramework;
 
             var group = dependencyGroups.FirstOrDefault(g => g.TargetFramework.Equals(framework));
             if (@group == null)
@@ -40,9 +40,12 @@ namespace PS.Build.Nuget.Extensions
             }
 
             var groupPackages = (ICollection<PackageDependency>)@group.Packages;
+
             var nugetVersionRange = VersionRange.All;
-            if (versionRange != null) nugetVersionRange = VersionRange.Parse(versionRange);
-            groupPackages.Add(new PackageDependency(dependencyID, nugetVersionRange));
+            if (reference.HasAllowedVersions) nugetVersionRange = reference.AllowedVersions;
+            else if (reference.PackageIdentity.HasVersion) nugetVersionRange = new VersionRange(reference.PackageIdentity.Version);
+
+            groupPackages.Add(new PackageDependency(reference.PackageIdentity.Id, nugetVersionRange));
         }
 
         internal static void AddOwner(this ManifestMetadata metadata, string name)

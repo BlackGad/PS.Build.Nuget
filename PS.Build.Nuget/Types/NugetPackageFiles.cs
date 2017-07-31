@@ -4,20 +4,19 @@
     {
         #region Constructors
 
-        public NugetPackageFiles(string source, string destination, string exclude = null)
+        public NugetPackageFiles(string source, string destination)
         {
             Source = source;
             Destination = destination;
-            Exclude = exclude;
         }
 
         #endregion
 
         #region Properties
 
-        public string Exclude { get; }
-        public string Source { get; }
         public string Destination { get; }
+
+        public string Source { get; }
 
         #endregion
     }

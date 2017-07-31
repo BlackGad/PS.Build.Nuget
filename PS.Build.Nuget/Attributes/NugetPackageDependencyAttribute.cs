@@ -1,6 +1,10 @@
 using System;
 using System.ComponentModel;
+using System.Diagnostics;
 using NuGet.Frameworks;
+using NuGet.Packaging;
+using NuGet.Packaging.Core;
+using NuGet.Versioning;
 using PS.Build.Extensions;
 using PS.Build.Nuget.Attributes.Base;
 using PS.Build.Nuget.Extensions;
@@ -37,11 +41,19 @@ namespace PS.Build.Nuget.Attributes
             try
             {
                 logger.Debug("Defining nuget package dependency");
-
                 var package = provider.GetVaultPackage(ID);
                 var framework = NuGetFramework.AnyFramework;
                 if (!string.IsNullOrWhiteSpace(_framework)) framework = NuGetFramework.Parse(_framework);
-                package.Metadata.AddDependency(_dependencyID, _versionRange, framework);
+                VersionRange versionRange;
+                VersionRange.TryParse(_versionRange ?? string.Empty, out versionRange);
+                NuGetVersion nugetVersion;
+                NuGetVersion.TryParse(_versionRange ?? string.Empty, out nugetVersion);
+                package.IncludeDependencies.Add(new PackageReference(new PackageIdentity(_dependencyID, nugetVersion),
+                                                                     framework,
+                                                                     false,
+                                                                     false,
+                                                                     false,
+                                                                     versionRange));
             }
             catch (Exception e)
             {

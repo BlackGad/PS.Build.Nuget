@@ -185,17 +185,21 @@
     <Compile Include="Attributes\NugetAttribute.cs" />
     <Compile Include="Attributes\NugetAuthorAttribute.cs" />
     <Compile Include="Attributes\NugetFilesAttribute.cs" />
+    <Compile Include="Attributes\NugetFilesFilterAttribute.cs" />
     <Compile Include="Attributes\NugetFilesFromTargetAttribute.cs" />
     <Compile Include="Attributes\NugetFrameworkReferenceAttribute.cs" />
     <Compile Include="Attributes\NugetOwnerAttribute.cs" />
     <Compile Include="Attributes\NugetPackageDependenciesFromConfigurationAttribute.cs" />
     <Compile Include="Attributes\NugetPackageDependencyAttribute.cs" />
+    <Compile Include="Attributes\NugetPackageDependenciesFilterAttribute.cs" />
+    <Compile Include="Extensions\PathExtensions.cs" />
     <Compile Include="Extensions\RoslynExtensions.cs" />
     <Compile Include="Extensions\ServiceProviderExtensions.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Types\NugetEnvironment.cs" />
     <Compile Include="Types\NugetExtensionMacroHandler.cs" />
     <Compile Include="Types\NugetPackage.cs" />
+    <Compile Include="Types\NugetPackageDependencyFilter.cs" />
     <Compile Include="Types\NugetPackageFiles.cs" />
   </ItemGroup>
   <ItemGroup>

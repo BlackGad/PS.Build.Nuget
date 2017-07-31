@@ -1,6 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
+using System.Linq;
+using NuGet.Frameworks;
 using NuGet.Packaging;
 using PS.Build.Extensions;
 using PS.Build.Nuget.Attributes.Base;
@@ -17,7 +21,7 @@ namespace PS.Build.Nuget.Attributes
         private readonly string _targetDirectory;
 
         #region Constructors
-        
+
         public NugetBuildAttribute(string targetDirectory = null)
         {
             _targetDirectory = targetDirectory;
@@ -36,17 +40,102 @@ namespace PS.Build.Nuget.Attributes
                 : _targetDirectory;
 
             logger.Info("Building nuget package");
-            logger.Info("ID: " + package.Metadata.Id);
-            logger.Info("Version: " + package.Metadata.Version);
-            logger.Info("Target: " + targetDirectory);
+            logger.Info("  Target directory: " + targetDirectory);
+            logger.Info("  ID: " + package.Metadata.Id);
+            logger.Info("  Version: " + package.Metadata.Version);
+
+            if (package.Metadata.Copyright != null) logger.Info("  Copyright: " + package.Metadata.Copyright);
+            if (package.Metadata.Description != null) logger.Info("  Description: " + package.Metadata.Description);
+            logger.Info("  Development dependency: " + package.Metadata.DevelopmentDependency);
+            if (package.Metadata.IconUrl != null) logger.Info("  Icon url: " + package.Metadata.IconUrl);
+            if (package.Metadata.Language != null) logger.Info("  Language: " + package.Metadata.Language);
+            if (package.Metadata.LicenseUrl != null) logger.Info("  License url: " + package.Metadata.LicenseUrl);
+            if (package.Metadata.MinClientVersion != null) logger.Info("  Minimum client version: " + package.Metadata.MinClientVersionString);
+            if (package.Metadata.ProjectUrl != null) logger.Info("  Project url: " + package.Metadata.ProjectUrl);
+            if (package.Metadata.ReleaseNotes != null) logger.Info("  Release notes: " + package.Metadata.ReleaseNotes);
+            logger.Info("  Require license acceptance: " + package.Metadata.RequireLicenseAcceptance);
+            logger.Info("  Serviceable: " + package.Metadata.Serviceable);
+            if (package.Metadata.Summary != null) logger.Info("  Summary: " + package.Metadata.Summary);
+            if (package.Metadata.Tags != null) logger.Info("  Tags: " + package.Metadata.Tags);
+            if (package.Metadata.Title != null) logger.Info("  Title: " + package.Metadata.Title);
+
+            if (package.IncludeDependencies.Any())
+            {
+                var includeLookup = package.IncludeDependencies.ToLookup(d => d.TargetFramework, d => d);
+                var excludeLookup = package.ExcludeDependencies.ToLookup(d => d.Framework, d => d.Mask);
+
+                foreach (var group in includeLookup)
+                {
+                    var bannedPackages = new List<string>();
+                    if (excludeLookup.Contains(group.Key))
+                    {
+                        bannedPackages.AddRange(
+                            excludeLookup[@group.Key].SelectMany(
+                                e => PathExtensions.Match(@group.Select(g => g.PackageIdentity.Id), e)));
+                    }
+
+                    if (excludeLookup.Contains(NuGetFramework.AnyFramework))
+                    {
+                        bannedPackages.AddRange(
+                            excludeLookup[NuGetFramework.AnyFramework].SelectMany(
+                                e => PathExtensions.Match(@group.Select(g => g.PackageIdentity.Id), e)));
+                    }
+
+                    foreach (var reference in group)
+                    {
+                        if (bannedPackages.Contains(reference.PackageIdentity.Id)) continue;
+                        package.Metadata.AddDependency(reference);
+                    }
+                }
+            }
+
+            logger.Info("  Package dependencies: " + (package.Metadata.DependencyGroups.Any() ? string.Empty : "None"));
+            foreach (var dependencyGroup in package.Metadata.DependencyGroups)
+            {
+                logger.Info("    Dependency group: " + dependencyGroup.TargetFramework);
+                foreach (var dependency in dependencyGroup.Packages)
+                {
+                    logger.Info("      Dependency: " + dependency);
+                }
+            }
+
             try
             {
                 var build = new PackageBuilder();
                 build.Populate(package.Metadata);
+                var includeLookup = package.IncludeFiles
+                                           .SelectMany(include => PathExtensions.EnumerateFiles(include.Source)
+                                                                                .Select(f => new
+                                                                                {
+                                                                                    include.Destination,
+                                                                                    Source = f
+                                                                                }))
+                                           .ToLookup(p => p.Destination.ToLowerInvariant(), p => p.Source);
 
-                foreach (var file in package.Files)
+                var excludeLookup = package.ExcludeFiles.ToLookup(p => p.Destination.ToLowerInvariant(), p => p.Source);
+                logger.Info("  Package files: " + (includeLookup.Any() ? string.Empty : "None"));
+
+                foreach (var group in includeLookup)
                 {
-                    build.AddFiles(targetDirectory, file.Source, file.Destination, file.Exclude);
+                    logger.Info("    Group: " + group.Key);
+                    var bannedFiles = new List<string>();
+                    if (excludeLookup.Contains(group.Key))
+                    {
+                        bannedFiles = excludeLookup[@group.Key].SelectMany(e => PathExtensions.Match(@group, e)).ToList();
+                    }
+
+                    foreach (var file in group)
+                    {
+                        if (!bannedFiles.Contains(file))
+                        {
+                            build.AddFiles(targetDirectory, file, group.Key);
+                            logger.Info("      + File: " + file);
+                        }
+                        else
+                        {
+                            logger.Info("      - File: " + file);
+                        }
+                    }
                 }
 
                 var finalPath = Path.Combine(targetDirectory, package.Metadata.Id + "." + package.Metadata.Version + ".nupkg");

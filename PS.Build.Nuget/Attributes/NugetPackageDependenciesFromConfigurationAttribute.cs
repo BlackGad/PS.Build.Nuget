@@ -17,6 +17,21 @@ namespace PS.Build.Nuget.Attributes
     [Designer("PS.Build.Adaptation")]
     public sealed class NugetPackageDependenciesFromConfigurationAttribute : BaseNugetAttribute
     {
+        #region Constructors
+
+        public NugetPackageDependenciesFromConfigurationAttribute()
+        {
+            AllDependenciesForAnyFramework = true;
+        }
+
+        #endregion
+
+        #region Properties
+
+        public bool AllDependenciesForAnyFramework { get; set; }
+
+        #endregion
+
         #region Members
 
         private void PreBuild(IServiceProvider provider)
@@ -36,29 +51,31 @@ namespace PS.Build.Nuget.Attributes
                     var package = provider.GetVaultPackage(ID);
                     logger.Debug(" Reading...");
                     var configReader = new PackagesConfigReader(XDocument.Parse(File.ReadAllText(packagesConfig.FullPath)));
-                    var dependencies = configReader.GetPackages(false);
-                    foreach (var dependency in dependencies)
+                    var references = configReader.GetPackages(false);
+                    foreach (var reference in references)
                     {
-                        if (!dependency.IsUserInstalled)
+                        if (!reference.IsUserInstalled)
                         {
-                            logger.Debug($" - Dependency '{dependency.PackageIdentity.Id}' installed automatically as " +
-                                         "dependecy for another package. Skipping.");
-                            continue;
-                        }
-                        if (dependency.PackageIdentity.Id.StartsWith("PS.Build"))
-                        {
-                            logger.Debug($" - Dependency '{dependency.PackageIdentity.Id}' id starts from 'PS.Build'. Skipping.");
+                            logger.Debug($" - Dependency '{reference.PackageIdentity.Id}' installed automatically as " +
+                                         "dependency for another package. Skipping.");
                             continue;
                         }
 
-                        var versionRange = dependency.PackageIdentity.HasVersion ? dependency.PackageIdentity.Version.ToString() : null;
-                        if (dependency.HasAllowedVersions) versionRange = dependency.AllowedVersions.ToString();
+                        if (AllDependenciesForAnyFramework)
+                        {
+                            package.IncludeDependencies.Add(new PackageReference(reference.PackageIdentity,
+                                                                                 NuGetFramework.AnyFramework,
+                                                                                 reference.IsUserInstalled,
+                                                                                 reference.IsDevelopmentDependency,
+                                                                                 reference.RequireReinstallation,
+                                                                                 reference.AllowedVersions));
+                        }
+                        else
+                        {
+                            package.IncludeDependencies.Add(reference);
+                        }
 
-                        package.Metadata.AddDependency(dependency.PackageIdentity.Id,
-                                                       versionRange,
-                                                       NuGetFramework.AnyFramework);
-
-                        logger.Debug($" + Nuget dependency '{dependency.PackageIdentity.Id}' added.");
+                        logger.Debug($" + Nuget dependency '{reference.PackageIdentity.Id}' added.");
                     }
                 }
                 catch (Exception e)

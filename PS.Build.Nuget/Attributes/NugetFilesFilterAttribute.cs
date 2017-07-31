@@ -10,14 +10,14 @@ namespace PS.Build.Nuget.Attributes
 {
     [AttributeUsage(AttributeTargets.Assembly, AllowMultiple = true)]
     [Designer("PS.Build.Adaptation")]
-    public sealed class NugetFilesAttribute : BaseNugetAttribute
+    public sealed class NugetFilesFilterAttribute : BaseNugetAttribute
     {
         private readonly string _destination;
         private readonly string _source;
 
         #region Constructors
 
-        public NugetFilesAttribute(string source, string destination)
+        public NugetFilesFilterAttribute(string source, string destination)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (destination == null) throw new ArgumentNullException(nameof(destination));
@@ -35,15 +35,15 @@ namespace PS.Build.Nuget.Attributes
 
             try
             {
-                logger.Debug("Defining nuget package file");
+                logger.Debug("Defining nuget package file filter");
                 var package = provider.GetVaultPackage(ID);
                 var resolver = provider.GetService<IMacroResolver>();
-                package.IncludeFiles.Add(new NugetPackageFiles(resolver.Resolve(_source),
+                package.ExcludeFiles.Add(new NugetPackageFiles(resolver.Resolve(_source),
                                                                resolver.Resolve(_destination)));
             }
             catch (Exception e)
             {
-                logger.Error("Package file definition failed. Details: " + e.GetBaseException().Message);
+                logger.Error("Package file filter definition failed. Details: " + e.GetBaseException().Message);
             }
         }
 
