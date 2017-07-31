@@ -8,8 +8,8 @@
     <ProjectGuid>{91C309C6-60B9-44D7-B9AA-268772D1F28C}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>ClassLibrary1</RootNamespace>
-    <AssemblyName>ClassLibrary1</AssemblyName>
+    <RootNamespace>PS.Build.Nuget.Artifacts</RootNamespace>
+    <AssemblyName>PS.Build.Nuget.Artifacts</AssemblyName>
     <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <NuGetPackageImportStamp>
@@ -43,6 +43,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Content\nuget.package.cs" />
     <Compile Include="Nuget.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
