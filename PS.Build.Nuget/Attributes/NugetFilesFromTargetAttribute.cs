@@ -46,7 +46,7 @@ namespace PS.Build.Nuget.Attributes
                 var target = explorer.Properties[BuildProperty.TargetPath];
                 if (MarkTargetAsAssemblyReference)
                 {
-                    package.Metadata.AddAssemblyReference(Path.GetFileNameWithoutExtension(target), null);
+                    package.Metadata.AddAssemblyReference(Path.GetFileName(target), null);
                 }
 
                 var files = new List<string>
