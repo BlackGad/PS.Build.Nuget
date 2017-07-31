@@ -38,6 +38,8 @@ namespace PS.Build.Nuget.Attributes
                 ? provider.GetService<IExplorer>().Directories[BuildDirectory.Target]
                 : _targetDirectory;
 
+            targetDirectory = provider.GetService<IMacroResolver>().Resolve(targetDirectory);
+
             logger.Info("Building nuget package");
             logger.Info("  Target directory: " + targetDirectory);
             logger.Info("  ID: " + package.Metadata.Id);
@@ -165,6 +167,7 @@ namespace PS.Build.Nuget.Attributes
                         }
                     }
                 }
+                targetDirectory.EnsureDirectoryExist();
 
                 var finalPath = Path.Combine(targetDirectory, package.Metadata.Id + "." + package.Metadata.Version + ".nupkg");
                 if (File.Exists(finalPath)) File.Delete(finalPath);

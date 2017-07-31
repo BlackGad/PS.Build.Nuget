@@ -9,6 +9,6 @@
 [assembly: NugetFilesFromTarget]
 [assembly: NugetFiles(@"{dir.target}\*.config", @"lib\{nuget.framework}")]
 //[assembly: NugetFilesFilter(@"{dir.target}\*.pdb", @"lib\{nuget.framework}")]
-[assembly: NugetBuild]
+[assembly: NugetBuild(@"{dir.solution}_Artifacts\{prop.configuration}.{prop.platform}")]
  
 #endif
