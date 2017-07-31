@@ -17,6 +17,25 @@ namespace PS.Build.Nuget.Extensions
     {
         #region Static members
 
+        internal static void AddAssemblyReference(this ManifestMetadata metadata, string assembly, string[] frameworks)
+        {
+            metadata.PackageAssemblyReferences = metadata.PackageAssemblyReferences ?? new List<PackageReferenceSet>();
+
+            var references = (ICollection<PackageReferenceSet>)metadata.PackageAssemblyReferences;
+
+            if (frameworks?.Length > 0)
+            {
+                foreach (var framework in frameworks)
+                {
+                    references.Add(new PackageReferenceSet(NuGetFramework.Parse(framework), new[] { assembly }));
+                }
+            }
+            else
+            {
+                references.Add(new PackageReferenceSet(NuGetFramework.AnyFramework, new[] { assembly }));
+            }
+        }
+
         internal static void AddAuthor(this ManifestMetadata metadata, string name)
         {
             metadata.Authors = metadata.Authors as List<string> ?? new List<string>();

@@ -15,11 +15,20 @@ namespace PS.Build.Nuget.Attributes
     [Designer("PS.Build.Adaptation")]
     public sealed class NugetFilesFromTargetAttribute : BaseNugetAttribute
     {
+        #region Constructors
+
+        public NugetFilesFromTargetAttribute()
+        {
+            MarkTargetAsAssemblyReference = true;
+        }
+
+        #endregion
+
         #region Properties
 
         public bool IncludeDocumentation { get; set; }
-
         public bool IncludePDB { get; set; }
+        public bool MarkTargetAsAssemblyReference { get; set; }
 
         #endregion
 
@@ -34,9 +43,15 @@ namespace PS.Build.Nuget.Attributes
             {
                 var package = provider.GetVaultPackage(ID);
 
+                var target = explorer.Properties[BuildProperty.TargetPath];
+                if (MarkTargetAsAssemblyReference)
+                {
+                    package.Metadata.AddAssemblyReference(Path.GetFileNameWithoutExtension(target), null);
+                }
+
                 var files = new List<string>
                 {
-                    explorer.Properties[BuildProperty.TargetPath]
+                    target
                 };
 
                 if (IncludePDB)

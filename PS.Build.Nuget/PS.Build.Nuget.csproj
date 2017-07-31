@@ -187,6 +187,7 @@
     <Compile Include="Attributes\NugetFilesAttribute.cs" />
     <Compile Include="Attributes\NugetFilesFilterAttribute.cs" />
     <Compile Include="Attributes\NugetFilesFromTargetAttribute.cs" />
+    <Compile Include="Attributes\NugetPackageAssemblyReferenceAttribute.cs" />
     <Compile Include="Attributes\NugetFrameworkReferenceAttribute.cs" />
     <Compile Include="Attributes\NugetOwnerAttribute.cs" />
     <Compile Include="Attributes\NugetPackageDependenciesFromConfigurationAttribute.cs" />

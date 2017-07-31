@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using NuGet.Frameworks;
@@ -58,6 +57,35 @@ namespace PS.Build.Nuget.Attributes
             if (package.Metadata.Summary != null) logger.Info("  Summary: " + package.Metadata.Summary);
             if (package.Metadata.Tags != null) logger.Info("  Tags: " + package.Metadata.Tags);
             if (package.Metadata.Title != null) logger.Info("  Title: " + package.Metadata.Title);
+
+            logger.Info("  Package framework references: " + (package.Metadata.FrameworkReferences.Any() ? string.Empty : "None"));
+
+            foreach (var reference in package.Metadata.FrameworkReferences)
+            {
+                logger.Info("    Assembly: " + reference.AssemblyName);
+                foreach (var framework in reference.SupportedFrameworks)
+                {
+                    logger.Info("      Framework: " + framework);
+                }
+            }
+
+            logger.Info("  Package assembly references: " + (package.Metadata.PackageAssemblyReferences.Any() ? string.Empty : "None"));
+            var regroupedPackageAssemblyReferences = package.Metadata.PackageAssemblyReferences
+                                                            .SelectMany(r => r.References
+                                                                              .Select(f => new
+                                                                              {
+                                                                                  r.TargetFramework,
+                                                                                  AssemblyName = f
+                                                                              }))
+                                                            .ToLookup(s => s.AssemblyName, s => s.TargetFramework);
+            foreach (var group in regroupedPackageAssemblyReferences)
+            {
+                logger.Info("    Assembly: " + group.Key);
+                foreach (var framework in group)
+                {
+                    logger.Info("      Framework: " + framework);
+                }
+            }
 
             if (package.IncludeDependencies.Any())
             {
