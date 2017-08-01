@@ -10,6 +10,7 @@ using PS.Build.Extensions;
 using PS.Build.Nuget.Types;
 using PS.Build.Services;
 using PS.Build.Types;
+using NugetPackage = PS.Build.Nuget.Types.NugetPackage;
 
 namespace PS.Build.Nuget.Extensions
 {
@@ -73,6 +74,44 @@ namespace PS.Build.Nuget.Extensions
 
             var collection = (ICollection<string>)metadata.Owners;
             collection.Add(name);
+        }
+
+        internal static IEnumerable<Tuple<string, string>> EnumerateFiles(this NugetPackage package, ILogger logger)
+        {
+            var includeLookup = package.IncludeFiles
+                                       .SelectMany(include => PathExtensions.EnumerateFiles(include.Source)
+                                                                            .Select(f => new
+                                                                            {
+                                                                                include.Destination,
+                                                                                Source = f
+                                                                            }))
+                                       .ToLookup(p => p.Destination.ToLowerInvariant(), p => p.Source);
+
+            var excludeLookup = package.ExcludeFiles.ToLookup(p => p.Destination.ToLowerInvariant(), p => p.Source);
+            logger?.Info("  Package files: " + (includeLookup.Any() ? string.Empty : "None"));
+
+            foreach (var group in includeLookup)
+            {
+                logger?.Info("    Group: " + group.Key);
+                var bannedFiles = new List<string>();
+                if (excludeLookup.Contains(group.Key))
+                {
+                    bannedFiles = excludeLookup[@group.Key].SelectMany(e => PathExtensions.Match(@group, e)).ToList();
+                }
+
+                foreach (var file in group)
+                {
+                    if (!bannedFiles.Contains(file))
+                    {
+                        yield return new Tuple<string, string>(file, group.Key);
+                        logger?.Info("      + File: " + file);
+                    }
+                    else
+                    {
+                        logger?.Info("      - File: " + file);
+                    }
+                }
+            }
         }
 
         internal static NugetPackage GetVaultPackage(this IServiceProvider provider, string id)

@@ -11,5 +11,6 @@
 [assembly: NugetFiles(@"{dir.project}\Content\nuget.package.cs", @"content", ID = "PS.Build.Nuget")]
 [assembly: NugetPackageAssemblyReference(@"PS.Build.Nuget.dll", ID = "PS.Build.Nuget")]
 [assembly: NugetBuild(@"{dir.solution}_Artifacts\{prop.configuration}.{prop.platform}", ID = "PS.Build.Nuget")]
+[assembly: NugetDebug(ID = "PS.Build.Nuget")]
 
 #endif

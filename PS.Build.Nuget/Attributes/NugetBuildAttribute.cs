@@ -133,40 +133,11 @@ namespace PS.Build.Nuget.Attributes
             {
                 var build = new PackageBuilder();
                 build.Populate(package.Metadata);
-                var includeLookup = package.IncludeFiles
-                                           .SelectMany(include => PathExtensions.EnumerateFiles(include.Source)
-                                                                                .Select(f => new
-                                                                                {
-                                                                                    include.Destination,
-                                                                                    Source = f
-                                                                                }))
-                                           .ToLookup(p => p.Destination.ToLowerInvariant(), p => p.Source);
-
-                var excludeLookup = package.ExcludeFiles.ToLookup(p => p.Destination.ToLowerInvariant(), p => p.Source);
-                logger.Info("  Package files: " + (includeLookup.Any() ? string.Empty : "None"));
-
-                foreach (var group in includeLookup)
+                foreach (var tuple in package.EnumerateFiles(logger))
                 {
-                    logger.Info("    Group: " + group.Key);
-                    var bannedFiles = new List<string>();
-                    if (excludeLookup.Contains(group.Key))
-                    {
-                        bannedFiles = excludeLookup[@group.Key].SelectMany(e => PathExtensions.Match(@group, e)).ToList();
-                    }
-
-                    foreach (var file in group)
-                    {
-                        if (!bannedFiles.Contains(file))
-                        {
-                            build.AddFiles(targetDirectory, file, group.Key);
-                            logger.Info("      + File: " + file);
-                        }
-                        else
-                        {
-                            logger.Info("      - File: " + file);
-                        }
-                    }
+                    build.AddFiles(targetDirectory, tuple.Item1, tuple.Item2);
                 }
+
                 targetDirectory.EnsureDirectoryExist();
 
                 var finalPath = Path.Combine(targetDirectory, package.Metadata.Id + "." + package.Metadata.Version + ".nupkg");
