@@ -1,6 +1,5 @@
 ﻿using System;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using PS.Build.Extensions;
@@ -15,14 +14,14 @@ namespace PS.Build.Nuget.Attributes
 {
     [AttributeUsage(AttributeTargets.Assembly, AllowMultiple = true)]
     [Designer("PS.Build.Adaptation")]
-    public sealed class NugetDebugAttribute : BaseNugetAttribute
+    public sealed class NugetDebugSubstitutionAttribute : BaseNugetAttribute
     {
         private readonly string _configurationFilePath;
         private readonly bool _generateTemplateFile;
 
         #region Constructors
 
-        public NugetDebugAttribute(string configurationFilePath = null, bool generateTemplateFile = true)
+        public NugetDebugSubstitutionAttribute(string configurationFilePath = null, bool generateTemplateFile = true)
         {
             _configurationFilePath = configurationFilePath;
             _generateTemplateFile = generateTemplateFile;
@@ -36,13 +35,13 @@ namespace PS.Build.Nuget.Attributes
         {
             if (!File.Exists(configurationFilePath))
             {
-                logger.Debug("  Configuration file does not exist");
+                logger.Debug("Configuration file does not exist");
                 return null;
             }
             NugetDebugConfiguration configuration;
             try
             {
-                logger.Debug("  Loading configuration file");
+                logger.Debug("Loading configuration file");
                 configuration = configurationFilePath.LoadXml<NugetDebugConfiguration>();
             }
             catch (Exception e)
@@ -58,18 +57,18 @@ namespace PS.Build.Nuget.Attributes
                                                                                  StringComparison.InvariantCultureIgnoreCase));
             if (existingRecord?.Solutions.Any(s => s.Directory != string.Empty) != true)
             {
-                logger.Debug("  Configuration file does not contains instructions for current package");
+                logger.Debug("Configuration file does not contains instructions for current package");
                 return configuration;
             }
 
-            logger.Info("  Collecting package files");
+            logger.Info("Collecting package files");
             var files = package.EnumerateFiles(logger).ToList();
             if (!files.Any()) return configuration;
 
             foreach (var solution in existingRecord.Solutions)
             {
                 if (string.IsNullOrWhiteSpace(solution.Directory)) continue;
-                logger.Info($"  Solution: {solution.Directory}");
+                logger.Info($"Solution: {solution.Directory}");
                 try
                 {
                     var nugetExplorer = new NugetExplorer(solution.Directory);
@@ -77,21 +76,24 @@ namespace PS.Build.Nuget.Attributes
                     if (nugetPackage == null) logger.Warn($"Solution {solution.Directory} have no {ID} package references");
                     else
                     {
-                        foreach (var file in files)
+                        using (logger.IndentMessages())
                         {
-                            var destination = Path.Combine(nugetPackage.Folder, file.Item2);
-                            var filename = Path.GetFileName(file.Item1) ?? string.Empty;
-                            if (!destination.EndsWith(filename, StringComparison.InvariantCultureIgnoreCase))
-                                destination = Path.Combine(destination, filename);
+                            foreach (var file in files)
+                            {
+                                var destination = Path.Combine(nugetPackage.Folder, file.Item2);
+                                var filename = Path.GetFileName(file.Item1) ?? string.Empty;
+                                if (!destination.EndsWith(filename, StringComparison.InvariantCultureIgnoreCase))
+                                    destination = Path.Combine(destination, filename);
 
-                            logger.Info($"    Copying {file.Item1} to {destination}");
-                            File.Copy(file.Item1, destination, true);
+                                logger.Info($"Copying {file.Item1} to {destination}");
+                                File.Copy(file.Item1, destination, true);
+                            }
                         }
                     }
                 }
                 catch (Exception e)
                 {
-                    logger.Warn($"Could not copy {solution}. Details: {e.GetBaseException().Message}");
+                    logger.Warn($"Could not handle debug nuget package substitution for {solution.Directory}. Details: {e.GetBaseException().Message}");
                 }
             }
 
@@ -128,7 +130,7 @@ namespace PS.Build.Nuget.Attributes
             var logger = provider.GetService<ILogger>();
             var explorer = provider.GetService<IExplorer>();
             var package = provider.GetVaultPackage(ID);
-            logger.Info($"Processing '{ID}' nuget package debug targets");
+            logger.Info($"Substituting '{ID}' nuget package dependant solutions");
             try
             {
                 var configurationFilePath = string.IsNullOrWhiteSpace(_configurationFilePath)
@@ -136,22 +138,26 @@ namespace PS.Build.Nuget.Attributes
                     : _configurationFilePath;
 
                 configurationFilePath = provider.GetService<IMacroResolver>().Resolve(configurationFilePath);
-                logger.Info($"  Configuration: {configurationFilePath}");
-
-                var configuration = HandleConfiguration(configurationFilePath, logger, package);
-
-                if (_generateTemplateFile)
+                using (logger.IndentMessages())
                 {
-                    configuration = ManageTemplateRecord(configuration);
-                    configuration.SaveXml(configurationFilePath);
-                }
+                    logger.Info($"Configuration: {configurationFilePath}");
 
-                logger.Info("Package debug targets successfully processed");
+                    var configuration = HandleConfiguration(configurationFilePath, logger, package);
+
+                    if (_generateTemplateFile && !logger.HasErrors)
+                    {
+                        configuration = ManageTemplateRecord(configuration);
+                        configuration.SaveXml(configurationFilePath);
+                    }
+                }
             }
             catch (Exception e)
             {
-                logger.Error("Package debug targets process failed. Details: " + e.GetBaseException().Message);
+                logger.Error($"Nuget package {ID} debug substitution failed. Details: " + e.GetBaseException().Message);
             }
+
+            if (logger.HasErrors) logger.Warn($"Nuget package {ID} debug substitutions processed with errors");
+            else logger.Info("Debug Nuget package substitutions successfully processed");
         }
 
         #endregion
