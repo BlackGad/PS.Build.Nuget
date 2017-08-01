@@ -85,8 +85,7 @@ namespace PS.Build.Nuget.Extensions
 
             vault.Query(() => new NugetEnvironment(provider));
 
-            id = id.ToLowerInvariant();
-            return vault.Query(id, () => CreateInitialPackage(provider, id));
+            return vault.Query(id.ToLowerInvariant(), () => CreateInitialPackage(provider, id));
         }
 
         private static NugetPackage CreateInitialPackage(IServiceProvider provider, string id)
