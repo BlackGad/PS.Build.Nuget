@@ -199,6 +199,8 @@
     <Compile Include="Extensions\SerializationExtensions.cs" />
     <Compile Include="Extensions\ServiceProviderExtensions.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Types\NugetDebugPackage.cs" />
+    <Compile Include="Types\NugetDebugSolution.cs" />
     <Compile Include="Types\NugetEnvironment.cs" />
     <Compile Include="Types\NugetExtensionMacroHandler.cs" />
     <Compile Include="Types\NugetPackage.cs" />

@@ -7,6 +7,16 @@ namespace PS.Build.Nuget.Extensions
     {
         #region Static members
 
+        public static T LoadXml<T>(this string path)
+        {
+            var serializer = new XmlSerializer(typeof(T));
+
+            using (var reader = new StreamReader(path))
+            {
+                return (T)serializer.Deserialize(reader);
+            }
+        }
+
         public static void SaveXml<T>(this T file, string path)
         {
             var serializer = new XmlSerializer(typeof(T));
