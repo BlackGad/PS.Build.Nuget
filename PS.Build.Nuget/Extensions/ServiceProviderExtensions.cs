@@ -91,7 +91,6 @@ namespace PS.Build.Nuget.Extensions
         private static NugetPackage CreateInitialPackage(IServiceProvider provider, string id)
         {
             var compilation = provider.GetService<Microsoft.CodeAnalysis.CSharp.CSharpCompilation>();
-            var explorer = provider.GetService<IExplorer>();
             var logger = provider.GetService<ILogger>();
 
             logger.Debug($"Creating initial '{id}' package record");

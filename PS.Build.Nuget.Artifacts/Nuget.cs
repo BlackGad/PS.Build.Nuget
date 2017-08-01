@@ -2,6 +2,7 @@
 
 #if DEBUG
 
+[assembly: Nuget(Title = "PS.Build Nuget Adaptation", ID = "PS.Build.Nuget")]
 [assembly: Nuget(ProjectUrl = "https://github.com/BlackGad/PS.Build.Nuget", ID = "PS.Build.Nuget")]
 [assembly: Nuget(LicenseUrl = "https://github.com/BlackGad/PS.Build.Nuget/blob/master/LICENSE", ID = "PS.Build.Nuget")]
 [assembly: Nuget(Tags = "PS.Build Nuget", ID = "PS.Build.Nuget")]
