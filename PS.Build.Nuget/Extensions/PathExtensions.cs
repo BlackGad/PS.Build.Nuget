@@ -15,18 +15,6 @@ namespace PS.Build.Nuget.Extensions
         #region Static members
 
         /// <summary>
-        ///     Ensures directory exist.
-        /// </summary>
-        /// <param name="directory">Full directory path</param>
-        /// <returns>Input directory for fluent operations.</returns>
-        public static string EnsureDirectoryExist(this string directory)
-        {
-            if (directory == null) throw new ArgumentNullException(nameof(directory));
-            if (!Directory.Exists(directory)) Directory.CreateDirectory(directory);
-            return directory;
-        }
-
-        /// <summary>
         ///     Enumerates directories by pattern.
         /// </summary>
         /// <param name="pattern">Search pattern.</param>
