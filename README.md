@@ -44,6 +44,3 @@ Preprocessor directives here is [runtime isolation](https://github.com/BlackGad/
 1>D:\Projects\NugetAdaptationExample\packages\ps.build.tasks.1.18.0\build\PS.Build.Tasks.targets(26,3): error : Package build failed. Details: Authors is required.
 1>D:\Projects\NugetAdaptationExample\packages\ps.build.tasks.1.18.0\build\PS.Build.Tasks.targets(26,3): error : Description is required.
 ```
-
-
-
