@@ -42,3 +42,6 @@ Current adaptation allows you to create Nuget packages from your code. Also cont
 1>    Package successfully created
 ```
 * Check ```D:\Projects\NugetAdaptationExample\NugetAdaptationExample\bin\Debug\NugetAdaptationExample.1.0.0.0.nupkg``` package 
+
+# Documentation
+Additional information could be found at project [wiki page](https://github.com/BlackGad/PS.Build.Nuget/wiki)
