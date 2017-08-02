@@ -17,6 +17,29 @@ All adaptations has ID property which by default equals your TargetName value.
 You can specify several nuget packages with unique ID in same project
 *************************************************************************/
 
+/****************************** Fast start ******************************
+using PS.Build.Nuget.Attributes;
+
+//PS.Build runtime isolation: https://github.com/BlackGad/PS.Build#preprocessor-directives-isolation.
+#if DEBUG
+
+// USE AssemblyDescriptionAttribute instead
+//[assembly: Nuget(Description = "Some description")]
+
+// USE AssemblyCompanyAttribute instead
+//[assembly: NugetAuthor("Author")]
+
+[assembly: NugetFilesFromTarget]
+[assembly: NugetPackageDependenciesFromConfiguration]
+[assembly: NugetPackageDependenciesFilter("NuGet.*")]
+[assembly: NugetPackageDependenciesFilter("PS.Build.*")]
+[assembly: NugetPackageDependenciesFilter("Newtonsoft.Json")]
+[assembly: NugetBuild]
+[assembly: NugetDebugSubstitution]
+
+#endif
+
+*************************************************************************/
 using PS.Build.Nuget.Attributes;
 
 //PS.Build runtime isolation: https://github.com/BlackGad/PS.Build#preprocessor-directives-isolation.
