@@ -7,7 +7,27 @@
 This adaptation allows you to create NuGet packages from your code. Also contains methods to easily debug local projects that has dependency from your nuget package.
 
 # Getting started
-Instructions to build you first project is [here](https://github.com/BlackGad/PS.Build.Nuget/wiki/Hello-World). 
+Fast code reference
+```csharp
+#if DEBUG
+
+// USE AssemblyDescriptionAttribute instead
+//[assembly: Nuget(Description = "Some description")]
+
+// USE AssemblyCompanyAttribute instead
+//[assembly: NugetAuthor("Author")]
+
+[assembly: NugetFilesFromTarget]
+[assembly: NugetPackageDependenciesFromConfiguration]
+[assembly: NugetPackageDependenciesFilter("NuGet.*")]
+[assembly: NugetPackageDependenciesFilter("PS.Build.*")]
+[assembly: NugetPackageDependenciesFilter("Newtonsoft.Json")]
+[assembly: NugetBuild]
+[assembly: NugetDebugSubstitution]
+
+#endif
+```
+Instructions to build you first project located [here](https://github.com/BlackGad/PS.Build.Nuget/wiki/Hello-World). 
 
 # Dependant projects debugging
 Process [description](https://github.com/BlackGad/PS.Build.Nuget/wiki/Dependant-projects-debugging).
