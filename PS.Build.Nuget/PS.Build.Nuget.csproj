@@ -83,8 +83,8 @@
       <HintPath>..\packages\NuGet.Versioning.4.3.0-beta1-2418\lib\net45\NuGet.Versioning.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="PS.Build, Version=1.17.4.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\ps.build.1.17.4\lib\net452\PS.Build.dll</HintPath>
+    <Reference Include="PS.Build, Version=1.18.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\ps.build.1.18.0\lib\net452\PS.Build.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="System" />
