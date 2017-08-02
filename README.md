@@ -9,7 +9,7 @@ Current adaptation allows you to create Nuget packages from your code. Also cont
 # Getting started
 * Create new [C# library](https://msdn.microsoft.com/en-us/library/f3cye135(v=vs.120).aspx) project. Name it **NugetAdaptationExample** (or skip this step if you already have any NET project that must produce nuget package)
 * Add reference to [PS.Build.Nuget](https://www.nuget.org/packages/PS.Build.Nuget/) nuget package to project. Package will add ```nuget.package.txt``` file to root of your project with breaf API description
-* (Optional) Select all ```Nuget.*```, ```PS.Build.Nuget``` and, if you do not use in your runtime ```Newtonsoft.Json``` assembly references and set ```Copy local: false``` option (I like clear output folder)
+* (Optional) Select all ```Nuget.*```, ```PS.Build.Nuget```, ```PS.Build``` and, if you do not use in your runtime ```Newtonsoft.Json``` assembly references and set ```Copy local: false``` option (I like clear output folder)
 * Copy ```Fast start``` section from ```nuget.package.txt``` to any cs file (```AssemblyInfo.cs``` or create ```nuget.package.cs``` compile file)
 * Add reference to [PS.Build.Tasks](https://www.nuget.org/packages/PS.Build.Tasks/) nuget package to project. This step will enable build adaptation engine in this project
 * Compile project and get errors:
