@@ -43,8 +43,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Content\nuget.package.cs" />
-    <Compile Include="Nuget.cs" />
+    <Content Include="Content\nuget.package.txt" />
+    <Compile Include="nuget.package.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <None Include="packages.config" />
   </ItemGroup>
