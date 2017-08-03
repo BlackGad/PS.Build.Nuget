@@ -7,6 +7,9 @@ using PS.Build.Services;
 
 namespace PS.Build.Nuget.Attributes
 {
+    /// <summary>
+    ///     Defines package assembly reference to be set in NuGet package
+    /// </summary>
     [AttributeUsage(AttributeTargets.Assembly, AllowMultiple = true)]
     [Designer("PS.Build.Adaptation")]
     public sealed class NugetPackageAssemblyReferenceAttribute : BaseNugetAttribute
@@ -16,6 +19,14 @@ namespace PS.Build.Nuget.Attributes
 
         #region Constructors
 
+        /// <summary>
+        ///     Add internal NuGet package assembly reference.
+        /// </summary>
+        /// <param name="assembly">Package assembly filename.</param>
+        /// <param name="frameworks">
+        ///     Specifies the target frameworks to which this reference applies. If omitted, indicates that
+        ///     the reference applies to all frameworks.
+        /// </param>
         public NugetPackageAssemblyReferenceAttribute(string assembly, params string[] frameworks)
         {
             if (assembly == null) throw new ArgumentNullException("assembly");

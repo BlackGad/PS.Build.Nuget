@@ -8,6 +8,9 @@ using PS.Build.Services;
 
 namespace PS.Build.Nuget.Attributes
 {
+    /// <summary>
+    ///     Defines files to be included to NuGet package
+    /// </summary>
     [AttributeUsage(AttributeTargets.Assembly, AllowMultiple = true)]
     [Designer("PS.Build.Adaptation")]
     public sealed class NugetFilesAttribute : BaseNugetAttribute
@@ -17,6 +20,19 @@ namespace PS.Build.Nuget.Attributes
 
         #region Constructors
 
+        /// <summary>
+        ///     Adds files to package.
+        /// </summary>
+        /// <param name="source">
+        ///     The location of the file or files to include. The path is relative to the .nuspec file unless an absolute path is
+        ///     specified. Macro resolver service
+        ///     and wildcards '*', '**' and '?' are supported.
+        /// </param>
+        /// <param name="destination">
+        ///     The relative path to the folder within the package where the source files are placed, which
+        ///     could begin with lib, content, build, or tools. Macro resolver service and wildcards '*', '**' and '?' are
+        ///     supported.
+        /// </param>
         public NugetFilesAttribute(string source, string destination)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
