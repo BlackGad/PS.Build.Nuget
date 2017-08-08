@@ -12,6 +12,10 @@ namespace PS.Build.Nuget.Attributes
     [Designer("PS.Build.Adaptation")]
     public sealed class NugetAttribute : BaseNugetAttribute
     {
+        private bool? _developmentDependency;
+        private bool? _requireLicenseAcceptance;
+        private bool? _serviceable;
+
         #region Properties
 
         /// <summary>
@@ -28,7 +32,11 @@ namespace PS.Build.Nuget.Attributes
         ///     (2.8+) A Boolean value specifying whether the package is be marked as a development-only-dependency, which prevents
         ///     the package from being included as a dependency in other packages.
         /// </summary>
-        public bool? DevelopmentDependency { get; set; }
+        public bool DevelopmentDependency
+        {
+            get { return _developmentDependency ?? false; }
+            set { _developmentDependency = value; }
+        }
 
         /// <summary>
         ///     A URL for a 64x64 image with transparency background to use as the icon for the package in UI display. Be sure this
@@ -73,12 +81,20 @@ namespace PS.Build.Nuget.Attributes
         ///     A Boolean value specifying whether the client must prompt the consumer to accept the package license before
         ///     installing the package.
         /// </summary>
-        public bool? RequireLicenseAcceptance { get; set; }
+        public bool RequireLicenseAcceptance
+        {
+            get { return _requireLicenseAcceptance ?? false; }
+            set { _requireLicenseAcceptance = value; }
+        }
 
         /// <summary>
         ///     (3.3+)For internal NuGet use only.
         /// </summary>
-        public bool? Serviceable { get; set; }
+        public bool Serviceable
+        {
+            get { return _serviceable ?? false; }
+            set { _serviceable = value; }
+        }
 
         /// <summary>
         ///     A short description of the package for UI display. If omitted, a truncated version of description is used.
@@ -118,15 +134,15 @@ namespace PS.Build.Nuget.Attributes
 
                 if (Copyright != null) package.Metadata.Copyright = Copyright;
                 if (Description != null) package.Metadata.Description = Description;
-                if (DevelopmentDependency != null) package.Metadata.DevelopmentDependency = DevelopmentDependency.Value;
+                if (_developmentDependency != null) package.Metadata.DevelopmentDependency = _developmentDependency.Value;
                 if (IconUrl != null) package.Metadata.SetIconUrl(IconUrl);
                 if (Language != null) package.Metadata.Language = Language;
                 if (LicenseUrl != null) package.Metadata.SetLicenseUrl(LicenseUrl);
                 if (MinClientVersion != null) package.Metadata.MinClientVersionString = MinClientVersion;
                 if (ProjectUrl != null) package.Metadata.SetProjectUrl(ProjectUrl);
                 if (ReleaseNotes != null) package.Metadata.ReleaseNotes = ReleaseNotes;
-                if (RequireLicenseAcceptance != null) package.Metadata.RequireLicenseAcceptance = RequireLicenseAcceptance.Value;
-                if (Serviceable != null) package.Metadata.Serviceable = Serviceable.Value;
+                if (_requireLicenseAcceptance != null) package.Metadata.RequireLicenseAcceptance = _requireLicenseAcceptance.Value;
+                if (_serviceable != null) package.Metadata.Serviceable = _serviceable.Value;
                 if (Summary != null) package.Metadata.Summary = Summary;
                 if (Tags != null) package.Metadata.Tags = Tags;
                 if (Title != null) package.Metadata.Title = Title;
