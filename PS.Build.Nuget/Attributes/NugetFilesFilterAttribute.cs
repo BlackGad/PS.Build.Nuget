@@ -8,6 +8,9 @@ using PS.Build.Services;
 
 namespace PS.Build.Nuget.Attributes
 {
+    /// <summary>
+    ///     Defines files to be filtered from included in NuGet package
+    /// </summary>
     [AttributeUsage(AttributeTargets.Assembly, AllowMultiple = true)]
     [Designer("PS.Build.Adaptation")]
     public sealed class NugetFilesFilterAttribute : BaseNugetAttribute
@@ -17,6 +20,17 @@ namespace PS.Build.Nuget.Attributes
 
         #region Constructors
 
+        /// <summary>
+        ///     The location of the file or files to filter. The path is relative to the .nuspec file unless an absolute path is
+        ///     specified. Macro resolver service
+        ///     and wildcards '*', '**' and '?' are supported.
+        /// </summary>
+        /// <param name="source">Source pattern. All macro and wildcards '*', '**' and '?' are supported.</param>
+        /// <param name="destination">
+        ///     The relative path to the folder within the package where the source files are placed, which
+        ///     could begin with lib, content, build, or tools. Macro resolver service and wildcards '*', '**' and '?' are
+        ///     supported.
+        /// </param>
         public NugetFilesFilterAttribute(string source, string destination)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));

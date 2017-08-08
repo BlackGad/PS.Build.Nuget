@@ -7,6 +7,9 @@ using PS.Build.Services;
 
 namespace PS.Build.Nuget.Attributes
 {
+    /// <summary>
+    ///     Defines author to be included to NuGet package
+    /// </summary>
     [AttributeUsage(AttributeTargets.Assembly, AllowMultiple = true)]
     [Designer("PS.Build.Adaptation")]
     public sealed class NugetAuthorAttribute : BaseNugetAttribute
@@ -16,6 +19,13 @@ namespace PS.Build.Nuget.Attributes
 
         #region Constructors
 
+        /// <summary>
+        ///     Adds author, matching the profile name on nuget.org. These is displayed in the NuGet Gallery on nuget.org and is
+        ///     used to cross-reference packages by the same author.
+        ///     By default value mapped from AssemblyCompany attribute.
+        /// </summary>
+        /// <param name="author">Author name.</param>
+        /// <param name="isOwner">Is author is owner.</param>
         public NugetAuthorAttribute(string author, bool isOwner = true)
         {
             if (author == null) throw new ArgumentNullException("author");

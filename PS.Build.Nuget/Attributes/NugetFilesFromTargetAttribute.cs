@@ -11,12 +11,18 @@ using PS.Build.Types;
 
 namespace PS.Build.Nuget.Attributes
 {
+    /// <summary>
+    ///     Defines default target files to be included to NuGet package.
+    /// </summary>
     [AttributeUsage(AttributeTargets.Assembly, AllowMultiple = true)]
     [Designer("PS.Build.Adaptation")]
     public sealed class NugetFilesFromTargetAttribute : BaseNugetAttribute
     {
         #region Constructors
 
+        /// <summary>
+        ///     Automatically add project target files to NuGet package.
+        /// </summary>
         public NugetFilesFromTargetAttribute()
         {
             MarkTargetAsAssemblyReference = true;
@@ -26,8 +32,19 @@ namespace PS.Build.Nuget.Attributes
 
         #region Properties
 
+        /// <summary>
+        ///     Add target xml documentation as well.
+        /// </summary>
         public bool IncludeDocumentation { get; set; }
+
+        /// <summary>
+        ///     Add target pdb as well.
+        /// </summary>
         public bool IncludePDB { get; set; }
+
+        /// <summary>
+        ///     Set target assembly as NuGet package assembly reference.
+        /// </summary>
         public bool MarkTargetAsAssemblyReference { get; set; }
 
         #endregion

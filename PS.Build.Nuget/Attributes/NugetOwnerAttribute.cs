@@ -7,6 +7,9 @@ using PS.Build.Services;
 
 namespace PS.Build.Nuget.Attributes
 {
+    /// <summary>
+    ///     Defines owners to be included to NuGet package
+    /// </summary>
     [AttributeUsage(AttributeTargets.Assembly, AllowMultiple = true)]
     [Designer("PS.Build.Adaptation")]
     public sealed class NugetOwnerAttribute : BaseNugetAttribute
@@ -15,6 +18,12 @@ namespace PS.Build.Nuget.Attributes
 
         #region Constructors
 
+        /// <summary>
+        ///     Adds owners, matching the profile name on nuget.org.  This is often the same list as in authors, and is ignored
+        ///     when uploading the package to nuget.org.
+        ///     By default value mapped from AssemblyCompany attribute.
+        /// </summary>
+        /// <param name="owner">Owner name.</param>
         public NugetOwnerAttribute(string owner)
         {
             if (string.IsNullOrWhiteSpace(owner)) throw new ArgumentNullException("owner");
