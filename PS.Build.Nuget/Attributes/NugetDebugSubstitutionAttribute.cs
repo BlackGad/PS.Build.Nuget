@@ -52,11 +52,11 @@ namespace PS.Build.Nuget.Attributes
                 return null;
             }
 
-            var existingRecord = configuration.Packages
+            var existingPackageConfiguration = configuration.Packages
                                               .FirstOrDefault(p => string.Equals(p.ID,
-                                                                                 ID,
+                                                                                 package.Metadata.Id,
                                                                                  StringComparison.InvariantCultureIgnoreCase));
-            if (existingRecord?.Solutions.Any(s => s.Directory != string.Empty) != true)
+            if (existingPackageConfiguration?.Solutions.Any(s => s.Directory != string.Empty) != true)
             {
                 logger.Debug("Configuration file does not contains instructions for current package");
                 return configuration;
@@ -66,15 +66,15 @@ namespace PS.Build.Nuget.Attributes
             var files = package.EnumerateFiles(logger).ToList();
             if (!files.Any()) return configuration;
 
-            foreach (var solution in existingRecord.Solutions)
+            foreach (var solution in existingPackageConfiguration.Solutions)
             {
                 if (string.IsNullOrWhiteSpace(solution.Directory)) continue;
                 logger.Info($"Solution: {solution.Directory}");
                 try
                 {
                     var nugetExplorer = new NugetExplorer(solution.Directory);
-                    var nugetPackage = nugetExplorer.FindPackage(ID);
-                    if (nugetPackage == null) logger.Warn($"Solution {solution.Directory} have no {ID} package references");
+                    var nugetPackage = nugetExplorer.FindPackage(package.Metadata.Id);
+                    if (nugetPackage == null) logger.Warn($"Solution {solution.Directory} have no {package.Metadata.Id} package references");
                     else
                     {
                         using (logger.IndentMessages())
@@ -101,23 +101,23 @@ namespace PS.Build.Nuget.Attributes
             return configuration;
         }
 
-        private NugetDebugConfiguration ManageTemplateRecord(NugetDebugConfiguration config)
+        private NugetDebugConfiguration ManageTemplateRecord(NugetDebugConfiguration config, NugetPackage package)
         {
             config = config ?? new NugetDebugConfiguration();
-            var package = config.Packages.FirstOrDefault(p => string.Equals(p.ID, ID, StringComparison.InvariantCultureIgnoreCase));
+            var packageConfiguration = config.Packages.FirstOrDefault(p => string.Equals(p.ID, package.Metadata.Id, StringComparison.InvariantCultureIgnoreCase));
 
-            if (package == null)
+            if (packageConfiguration == null)
             {
-                package = new NugetDebugPackage
+                packageConfiguration = new NugetDebugPackage
                 {
-                    ID = ID
+                    ID = package.Metadata.Id
                 };
 
-                config.Packages.Add(package);
+                config.Packages.Add(packageConfiguration);
             }
-            if (!package.Solutions.Any())
+            if (!packageConfiguration.Solutions.Any())
             {
-                package.Solutions.Add(new NugetDebugSolution
+                packageConfiguration.Solutions.Add(new NugetDebugSolution
                 {
                     Directory = string.Empty
                 });
@@ -131,7 +131,7 @@ namespace PS.Build.Nuget.Attributes
             var logger = provider.GetService<ILogger>();
             var explorer = provider.GetService<IExplorer>();
             var package = provider.GetVaultPackage(ID);
-            logger.Info($"Substituting '{ID}' nuget package dependant solutions");
+            logger.Info($"Substituting '{package.Metadata.Id}' nuget package dependant solutions");
             try
             {
                 var configurationFilePath = string.IsNullOrWhiteSpace(_configurationFilePath)
@@ -147,17 +147,17 @@ namespace PS.Build.Nuget.Attributes
 
                     if (_generateTemplateFile && !logger.HasErrors)
                     {
-                        configuration = ManageTemplateRecord(configuration);
+                        configuration = ManageTemplateRecord(configuration, package);
                         configuration.SaveXml(configurationFilePath);
                     }
                 }
             }
             catch (Exception e)
             {
-                logger.Error($"Nuget package {ID} debug substitution failed. Details: " + e.GetBaseException().Message);
+                logger.Error($"Nuget package {package.Metadata.Id} debug substitution failed. Details: " + e.GetBaseException().Message);
             }
 
-            if (logger.HasErrors) logger.Warn($"Nuget package {ID} debug substitutions processed with errors");
+            if (logger.HasErrors) logger.Warn($"Nuget package {package.Metadata.Id} debug substitutions processed with errors");
             else logger.Info("Debug Nuget package substitutions successfully processed");
         }
 
