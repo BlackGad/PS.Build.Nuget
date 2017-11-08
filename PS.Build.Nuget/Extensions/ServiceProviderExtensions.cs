@@ -7,7 +7,6 @@ using NuGet.Packaging;
 using NuGet.Packaging.Core;
 using NuGet.Versioning;
 using PS.Build.Extensions;
-using PS.Build.Nuget.Types;
 using PS.Build.Services;
 using PS.Build.Types;
 using NugetPackage = PS.Build.Nuget.Types.NugetPackage;
@@ -127,8 +126,6 @@ namespace PS.Build.Nuget.Extensions
 
             var vault = provider.GetService<IDynamicVault>();
             if (vault == null) throw new ArgumentNullException(nameof(vault));
-
-            vault.Query(() => new NugetEnvironment(provider));
 
             return vault.Query(id.ToLowerInvariant(), () => CreateInitialPackage(provider, id));
         }
