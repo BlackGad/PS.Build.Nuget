@@ -79,8 +79,8 @@
       <HintPath>..\packages\NuGet.Versioning.4.4.0\lib\net45\NuGet.Versioning.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="PS.Build, Version=1.19.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\PS.Build.1.19.0\lib\net452\PS.Build.dll</HintPath>
+    <Reference Include="PS.Build, Version=1.20.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\PS.Build.1.20.0\lib\net452\PS.Build.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="System" />
