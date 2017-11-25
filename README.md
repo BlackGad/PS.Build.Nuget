@@ -9,8 +9,6 @@ This adaptation allows you to create NuGet packages from your code. Also contain
 # Getting started
 Fast code reference
 ```csharp
-#if DEBUG
-
 // USE AssemblyDescriptionAttribute instead
 //[assembly: Nuget(Description = "Some description")]
 
@@ -24,8 +22,6 @@ Fast code reference
 [assembly: NugetPackageDependenciesFilter("Newtonsoft.Json")]
 [assembly: NugetBuild]
 [assembly: NugetDebugSubstitution]
-
-#endif
 ```
 Instructions to build you first project located [here](https://github.com/BlackGad/PS.Build.Nuget/wiki/Hello-World). 
 
