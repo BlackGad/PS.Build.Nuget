@@ -26,11 +26,6 @@ namespace PS.Build.Nuget.Types
             {
                 PackageFramework = new NuGetFramework(FrameworkConstants.FrameworkIdentifiers.Net, targetFrameworkVersion);
             }
-
-            provider.GetService<IMacroResolver>().Register(new NugetExtensionMacroHandler
-            {
-                PackageFrameworkDirectory = PackageFramework.GetShortFolderName()
-            });
         }
 
         #endregion

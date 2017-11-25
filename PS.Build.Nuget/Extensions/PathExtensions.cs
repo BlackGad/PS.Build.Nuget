@@ -153,7 +153,7 @@ namespace PS.Build.Nuget.Extensions
             pattern = pattern.Replace(@"\\\*\*\\", @".*");
             pattern = pattern.Replace(@"\\\*\*", @".*");
             pattern = pattern.Replace(@"\*\*", @".*");
-            pattern = pattern.Replace(@"\*", @".+");
+            pattern = pattern.Replace(@"\*", @".*");
             pattern = pattern.Replace(@"\?", @".");
             return pattern;
         }
