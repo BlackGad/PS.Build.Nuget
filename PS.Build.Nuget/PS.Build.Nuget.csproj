@@ -31,6 +31,10 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="BouncyCastle.Crypto, Version=1.8.1.0, Culture=neutral, PublicKeyToken=0e99375e54769942">
+      <HintPath>..\packages\BouncyCastle.1.8.1\lib\BouncyCastle.Crypto.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="Microsoft.CodeAnalysis, Version=2.6.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.CodeAnalysis.Common.2.6.1\lib\netstandard1.3\Microsoft.CodeAnalysis.dll</HintPath>
       <Private>True</Private>
@@ -182,6 +186,7 @@
     <Compile Include="Attributes\NugetAttribute.cs" />
     <Compile Include="Attributes\NugetAuthorAttribute.cs" />
     <Compile Include="Attributes\NugetFilesAttribute.cs" />
+    <Compile Include="Attributes\NugetFilesEncryptionCertificateAttribute.cs" />
     <Compile Include="Attributes\NugetFilesFilterAttribute.cs" />
     <Compile Include="Attributes\NugetFilesFromTargetAttribute.cs" />
     <Compile Include="Attributes\NugetPackageAssemblyReferenceAttribute.cs" />
@@ -190,11 +195,14 @@
     <Compile Include="Attributes\NugetPackageDependenciesFromConfigurationAttribute.cs" />
     <Compile Include="Attributes\NugetPackageDependencyAttribute.cs" />
     <Compile Include="Attributes\NugetPackageDependenciesFilterAttribute.cs" />
+    <Compile Include="Extensions\AssemblyExtensions.cs" />
     <Compile Include="Extensions\PathExtensions.cs" />
     <Compile Include="Extensions\RoslynExtensions.cs" />
     <Compile Include="Extensions\SerializationExtensions.cs" />
     <Compile Include="Extensions\ServiceProviderExtensions.cs" />
+    <Compile Include="Extensions\X509Certificate2Extensions.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Types\CompositeValidationResult.cs" />
     <Compile Include="Types\NugetPackageDependencyBehavior.cs" />
     <Compile Include="Types\NugetDebugPackage.cs" />
     <Compile Include="Types\NugetDebugSolution.cs" />
@@ -203,7 +211,14 @@
     <Compile Include="Types\NugetPackage.cs" />
     <Compile Include="Types\NugetDebugConfiguration.cs" />
     <Compile Include="Types\NugetPackageDependencyFilter.cs" />
+    <Compile Include="Types\NugetPackageFile.cs" />
     <Compile Include="Types\NugetPackageFiles.cs" />
+    <Compile Include="X509Certificate\X509CertificateFileSearch.cs" />
+    <Compile Include="X509Certificate\IX509CertificateSearch.cs" />
+    <Compile Include="X509Certificate\X509CertificateManifestResourceSearch.cs" />
+    <Compile Include="X509Certificate\X509CertificateStorageIdentifier.cs" />
+    <Compile Include="X509Certificate\X509CertificateStorageSearch.cs" />
+    <Compile Include="X509Certificate\X509CertificateStreamSearch.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />

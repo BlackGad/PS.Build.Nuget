@@ -182,9 +182,22 @@ namespace PS.Build.Nuget.Attributes
                 {
                     var build = new PackageBuilder();
                     build.Populate(package.Metadata);
-                    foreach (var tuple in package.EnumerateFiles(logger))
+                    var files = package.EnumerateFiles(logger).ToList();
+
+                    if (files.Any(f => f.Encrypt))
                     {
-                        build.AddFiles(targetDirectory, tuple.Item1, tuple.Item2);
+                        //Ensure encrypt cert exist
+                        X509Certificate2Extensions.Main();
+                    }
+
+                    foreach (var file in files)
+                    {
+                        if (file.Encrypt)
+                        {
+                            //Encrypt file and pack encrypted
+                        }
+
+                        build.AddFiles(targetDirectory, file.Source, file.Destination);
                     }
 
                     targetDirectory.EnsureDirectoryExist();
@@ -197,6 +210,8 @@ namespace PS.Build.Nuget.Attributes
                         logger.Debug("Building...");
                         build.Save(stream);
                     }
+
+                    //Save encrypt certificate near nuget package
                     logger.Info("Package successfully created");
                 }
                 catch (Exception e)

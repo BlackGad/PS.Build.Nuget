@@ -81,13 +81,13 @@ namespace PS.Build.Nuget.Attributes
                         {
                             foreach (var file in files)
                             {
-                                var destination = Path.Combine(nugetPackage.Folder, file.Item2);
-                                var filename = Path.GetFileName(file.Item1) ?? string.Empty;
+                                var destination = Path.Combine(nugetPackage.Folder, file.Destination);
+                                var filename = Path.GetFileName(file.Source) ?? string.Empty;
                                 if (!destination.EndsWith(filename, StringComparison.InvariantCultureIgnoreCase))
                                     destination = Path.Combine(destination, filename);
 
-                                logger.Info($"Copying {file.Item1} to {destination}");
-                                File.Copy(file.Item1, destination, true);
+                                logger.Info($"Copying {file.Source} to {destination}");
+                                File.Copy(file.Source, destination, true);
                             }
                         }
                     }
