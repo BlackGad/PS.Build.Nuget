@@ -79,8 +79,8 @@
       <HintPath>..\packages\NuGet.Versioning.4.5.0\lib\net45\NuGet.Versioning.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="PS.Build, Version=1.25.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\PS.Build.1.25.0\lib\net452\PS.Build.dll</HintPath>
+    <Reference Include="PS.Build, Version=1.25.1.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\PS.Build.1.25.1\lib\net452\PS.Build.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="System" />
@@ -195,6 +195,7 @@
     <Compile Include="Extensions\SerializationExtensions.cs" />
     <Compile Include="Extensions\ServiceProviderExtensions.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Types\NugetPackageDependencyBehavior.cs" />
     <Compile Include="Types\NugetDebugPackage.cs" />
     <Compile Include="Types\NugetDebugSolution.cs" />
     <Compile Include="Types\NugetEnvironment.cs" />
