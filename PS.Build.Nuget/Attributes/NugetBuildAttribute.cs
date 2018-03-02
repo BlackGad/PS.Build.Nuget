@@ -184,6 +184,8 @@ namespace PS.Build.Nuget.Attributes
 
                 try
                 {
+                    targetDirectory.EnsureDirectoryExist();
+
                     var build = new PackageBuilder();
                     build.Populate(package.Metadata);
 
@@ -267,8 +269,6 @@ namespace PS.Build.Nuget.Attributes
                         configuration.SaveXml(encryptionConfigurationFilePath);
                         build.AddFiles(targetDirectory, encryptionConfigurationFilePath, string.Empty);
                     }
-
-                    targetDirectory.EnsureDirectoryExist();
 
                     var finalPath = Path.Combine(targetDirectory, package.Metadata.Id + "." + package.Metadata.Version + ".nupkg");
                     if (File.Exists(finalPath)) File.Delete(finalPath);
