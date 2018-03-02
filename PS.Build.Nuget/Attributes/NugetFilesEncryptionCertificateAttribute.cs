@@ -1,6 +1,9 @@
 using System;
 using System.ComponentModel;
+using System.Diagnostics;
+using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Security.Cryptography.X509Certificates;
 using PS.Build.Extensions;
 using PS.Build.Nuget.Attributes.Base;
@@ -19,6 +22,7 @@ namespace PS.Build.Nuget.Attributes
     {
         private readonly string _assemblyFilePath;
         private readonly string _certificateFilePath;
+        private readonly X509FindType _findType;
         private readonly object _findValue;
         private readonly string _password;
         private readonly string _resourceName;
@@ -26,7 +30,6 @@ namespace PS.Build.Nuget.Attributes
         private readonly Type _searchType;
         private readonly StoreLocation _storeLocation;
         private readonly StoreName _storeName;
-        private readonly X509FindType _findType;
 
         #region Constructors
 
@@ -36,8 +39,10 @@ namespace PS.Build.Nuget.Attributes
             _storeName = storeName;
             _findType = findType;
             _findValue = findValue;
-
+            
             _searchType = typeof(X509CertificateStorageSearch);
+
+            Export = true;
         }
 
         public NugetFilesEncryptionCertificateAttribute(string certificateFilePath, string password)
@@ -46,6 +51,8 @@ namespace PS.Build.Nuget.Attributes
             _password = password;
 
             _searchType = typeof(X509CertificateFileSearch);
+
+            Export = true;
         }
 
         public NugetFilesEncryptionCertificateAttribute(string assemblyFilePath, string resourceName, string password)
@@ -55,7 +62,16 @@ namespace PS.Build.Nuget.Attributes
             _password = password;
 
             _searchType = typeof(X509CertificateManifestResourceSearch);
+
+            Export = true;
         }
+
+        #endregion
+
+        #region Properties
+
+        public string TargetCertificatePassword { get; set; }
+        public bool Export { get; set; }
 
         #endregion
 
@@ -71,34 +87,52 @@ namespace PS.Build.Nuget.Attributes
                 logger.Debug("Searching security certificate");
                 var package = provider.GetVaultPackage(ID);
 
-                X509Certificate2 certificate = null;
-
+                IX509CertificateSearch search = null;
                 if (_searchType == typeof(X509CertificateManifestResourceSearch))
                 {
-                    var search = new X509CertificateManifestResourceSearch
+                    search = new X509CertificateManifestResourceSearch
                     {
+                        Assembly = Assembly.LoadFile(resolver.Resolve(_assemblyFilePath)),
+                        ResourceName = resolver.Resolve(_resourceName),
                         Password = _password
                     };
-                    certificate = search.Search().FirstOrDefault();
                 }
                 else if (_searchType == typeof(X509CertificateFileSearch))
                 {
+                    var path = resolver.Resolve(_certificateFilePath);
+                    if (!File.Exists(path))
+                    {
+                        var newCertificate = X509Certificate2Extensions.CreateSelfSignedCertificate("CN=" + package.Metadata.Id, "CN=PS.Build.Nuget");
+                        var bytes = string.IsNullOrWhiteSpace(_password)
+                            ? newCertificate.Export(X509ContentType.Pfx)
+                            : newCertificate.Export(X509ContentType.Pfx, _password);
+
+                        File.WriteAllBytes(path, bytes);
+                    }
+
+                    search = new X509CertificateFileSearch
+                    {
+                        SourceFile = path,
+                        Password = _password
+                    };
                 }
                 else if (_searchType == typeof(X509CertificateStorageSearch))
                 {
-                    var search = new X509CertificateStorageSearch
+                    search = new X509CertificateStorageSearch
                     {
                         StoreLocation = _storeLocation,
                         StoreName = _storeName,
                         FindType = _findType,
                         FindValue = _findValue
                     };
-                    certificate = search.Search().FirstOrDefault();
                 }
 
+                var certificate = search?.Search().FirstOrDefault();
                 if (certificate == null) throw new ArgumentException("Certificate for files encrypting not found");
 
                 package.X509Certificate = certificate;
+                package.X509CertificatePassword = TargetCertificatePassword;
+                package.X509CertificateExport = Export;
             }
             catch (Exception e)
             {

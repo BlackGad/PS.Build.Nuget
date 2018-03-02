@@ -1,17 +1,25 @@
 ﻿using System.Security.Cryptography.X509Certificates;
 using PS.Build.Nuget.Attributes;
 
-
 [assembly: Nuget(Title = "PS.Build Nuget Adaptation", ID = "PS.Build.Nuget")]
 [assembly: Nuget(ProjectUrl = "https://github.com/BlackGad/PS.Build.Nuget", ID = "PS.Build.Nuget")]
 [assembly: Nuget(LicenseUrl = "https://github.com/BlackGad/PS.Build.Nuget/blob/master/LICENSE", ID = "PS.Build.Nuget")]
 [assembly: Nuget(Tags = "PS.Build Nuget", ID = "PS.Build.Nuget")]
 [assembly: NugetFiles(@"{dir.solution}\PS.Build.Nuget\bin\{prop.configuration}\PS.Build.Nuget.dll", @"lib\{nuget.framework}", ID = "PS.Build.Nuget")]
 [assembly: NugetFiles(@"{dir.solution}\PS.Build.Nuget\bin\{prop.configuration}\Nuget.*.dll", @"lib\{nuget.framework}", ID = "PS.Build.Nuget")]
-[assembly: NugetFiles(@"{dir.solution}\PS.Build.Nuget\bin\{prop.configuration}\BouncyCastle.Crypto.dll", @"lib\{nuget.framework}", ID = "PS.Build.Nuget")]
+[assembly: NugetFiles(
+    @"{dir.solution}\PS.Build.Nuget\bin\{prop.configuration}\BouncyCastle.Crypto.dll",
+    @"lib\{nuget.framework}",
+    ID = "PS.Build.Nuget")]
 [assembly: NugetFiles(@"{dir.project}\Content\**.\*.*", @"content", true, ID = "PS.Build.Nuget")]
-[assembly: NugetFilesEncryptionCertificate(X509FindType.FindByApplicationPolicy, StoreLocation.CurrentUser, StoreName.AddressBook, "s")]
+//[assembly: NugetFilesEncryptionCertificate(
+//    StoreLocation.CurrentUser,
+//    StoreName.AddressBook,
+//    X509FindType.FindByApplicationPolicy,
+//    "s")]
+
+[assembly: NugetFilesEncryptionCertificate(@"{dir.solution}\PS.Build.Nuget.pfx", null, ID = "PS.Build.Nuget")]
+
 [assembly: NugetPackageAssemblyReference(@"PS.Build.Nuget.dll", ID = "PS.Build.Nuget")]
 [assembly: NugetBuild(@"{dir.solution}_Artifacts\{prop.configuration}.{prop.platform}", ID = "PS.Build.Nuget")]
 [assembly: NugetDebugSubstitution(ID = "PS.Build.Nuget")]
-

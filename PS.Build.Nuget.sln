@@ -1,13 +1,21 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14 
+# Visual Studio 14
 VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PS.Build.Nuget", "PS.Build.Nuget\PS.Build.Nuget.csproj", "{81D904E8-749D-4F81-95B3-844A9F00D90C}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PS.Build.Nuget.Artifacts", "PS.Build.Nuget.Artifacts\PS.Build.Nuget.Artifacts.csproj", "{91C309C6-60B9-44D7-B9AA-268772D1F28C}"
 EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "PS.Build.Nuget.Shared", "PS.Build.Nuget.Shared\PS.Build.Nuget.Shared.shproj", "{29CF9B9B-69EB-4BBB-B464-200A875BA6FA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PS.Build.Nuget.Tasks", "PS.Build.Nuget.Tasks\PS.Build.Nuget.Tasks.csproj", "{90D4EC67-0A37-4A38-97AE-E37F28F10040}"
+EndProject
 Global
+	GlobalSection(SharedMSBuildProjectFiles) = preSolution
+		PS.Build.Nuget.Shared\PS.Build.Nuget.Shared.projitems*{29cf9b9b-69eb-4bbb-b464-200a875ba6fa}*SharedItemsImports = 13
+		PS.Build.Nuget.Shared\PS.Build.Nuget.Shared.projitems*{81d904e8-749d-4f81-95b3-844a9f00d90c}*SharedItemsImports = 4
+	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
@@ -21,6 +29,10 @@ Global
 		{91C309C6-60B9-44D7-B9AA-268772D1F28C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{91C309C6-60B9-44D7-B9AA-268772D1F28C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{91C309C6-60B9-44D7-B9AA-268772D1F28C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{90D4EC67-0A37-4A38-97AE-E37F28F10040}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{90D4EC67-0A37-4A38-97AE-E37F28F10040}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{90D4EC67-0A37-4A38-97AE-E37F28F10040}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{90D4EC67-0A37-4A38-97AE-E37F28F10040}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

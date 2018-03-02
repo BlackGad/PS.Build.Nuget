@@ -1,9 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
+using System.Linq;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
-using System.Text;
 using Org.BouncyCastle.Asn1;
 using Org.BouncyCastle.Asn1.Pkcs;
 using Org.BouncyCastle.Asn1.X509;
@@ -17,6 +16,7 @@ using Org.BouncyCastle.Pkcs;
 using Org.BouncyCastle.Security;
 using Org.BouncyCastle.Utilities;
 using Org.BouncyCastle.X509;
+using PS.Build.Extensions;
 
 namespace PS.Build.Nuget.Extensions
 {
@@ -144,27 +144,19 @@ namespace PS.Build.Nuget.Extensions
             return x509;
         }
 
-        public static void Main()
+        public static byte[] Decrypt(this X509Certificate2 certificate, byte[] encryptedData)
         {
-            var certSubjectName = "TEST";
+            if (certificate == null) throw new ArgumentNullException(nameof(certificate));
 
-            AsymmetricKeyParameter privateKey;
-            var certificateAuthorityCertificate = CreateAuthorityCertificate("CN=" + certSubjectName + "CA", out privateKey);
-            File.WriteAllBytes(@"e:\temp\1.pfx", certificateAuthorityCertificate.Export(X509ContentType.Pfx));
+            var privateCertKey = (RSACryptoServiceProvider)certificate.PrivateKey;
+            return privateCertKey.Decrypt(encryptedData, false);
+        }
 
-            var certificateBasedOnAuthority = CreateSelfSignedCertificate("CN=" + certSubjectName, "CN=" + certSubjectName + "CA", privateKey);
-            File.WriteAllBytes(@"e:\temp\2.pfx", certificateBasedOnAuthority.Export(X509ContentType.Pfx));
-
-            var selfSignedCertificate = CreateSelfSignedCertificate("CN=" + certSubjectName, "CN=" + certSubjectName);
-            File.WriteAllBytes(@"e:\temp\3.pfx", selfSignedCertificate.Export(X509ContentType.Pfx));
-
-            var publicCertKey = (RSACryptoServiceProvider)selfSignedCertificate.PublicKey.Key;
-            var encrypted = publicCertKey.Encrypt(Encoding.UTF8.GetBytes("123456789"), false);
-            File.WriteAllBytes(@"e:\temp\3.enc", encrypted);
-
-            var privateCertKey = (RSACryptoServiceProvider)selfSignedCertificate.PrivateKey;
-            var decrypted = privateCertKey.Decrypt(encrypted, false);
-            File.WriteAllBytes(@"e:\temp\3.dec", decrypted);
+        public static byte[] Encrypt(this X509Certificate2 certificate, byte[] data)
+        {
+            if (certificate == null) throw new ArgumentNullException(nameof(certificate));
+            var publicCertKey = (RSACryptoServiceProvider)certificate.PublicKey.Key;
+            return publicCertKey.Encrypt(data.Enumerate().ToArray(), false);
         }
 
         #endregion

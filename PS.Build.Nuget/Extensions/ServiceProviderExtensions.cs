@@ -91,7 +91,6 @@ namespace PS.Build.Nuget.Extensions
 
             var excludeLookup = package.ExcludeFiles.ToLookup(p => p.Destination.ToLowerInvariant(), p => p.Source);
             logger?.Info("Package files: " + (includeLookup.Any() ? string.Empty : "None"));
-            Debugger.Launch();
             foreach (var group in includeLookup)
             {
                 using (logger?.IndentMessages())

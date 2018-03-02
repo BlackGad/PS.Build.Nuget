@@ -41,7 +41,7 @@ namespace PS.Build.Nuget.X509Certificate
         {
             using (var stream = GetStream())
             {
-                return new[] { new X509Certificate2(ReadStream(stream), Password) };
+                return new[] { new X509Certificate2(ReadStream(stream), Password, X509KeyStorageFlags.Exportable) };
             }
         }
 

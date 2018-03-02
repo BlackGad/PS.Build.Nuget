@@ -1,0 +1,23 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+    <HasSharedItems>true</HasSharedItems>
+    <SharedGUID>29cf9b9b-69eb-4bbb-b464-200a875ba6fa</SharedGUID>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration">
+    <Import_RootNamespace>PS.Build.Nuget.Shared</Import_RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)Extensions\AssemblyExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Extensions\AESExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Extensions\ByteArrayExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Extensions\X509Certificate2Extensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)X509Certificate\IX509CertificateSearch.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)X509Certificate\X509CertificateFileSearch.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)X509Certificate\X509CertificateManifestResourceSearch.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)X509Certificate\X509CertificateStorageIdentifier.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)X509Certificate\X509CertificateStorageSearch.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)X509Certificate\X509CertificateStreamSearch.cs" />
+  </ItemGroup>
+</Project>

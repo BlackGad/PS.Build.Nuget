@@ -195,30 +195,25 @@
     <Compile Include="Attributes\NugetPackageDependenciesFromConfigurationAttribute.cs" />
     <Compile Include="Attributes\NugetPackageDependencyAttribute.cs" />
     <Compile Include="Attributes\NugetPackageDependenciesFilterAttribute.cs" />
-    <Compile Include="Extensions\AssemblyExtensions.cs" />
     <Compile Include="Extensions\PathExtensions.cs" />
     <Compile Include="Extensions\RoslynExtensions.cs" />
     <Compile Include="Extensions\SerializationExtensions.cs" />
     <Compile Include="Extensions\ServiceProviderExtensions.cs" />
-    <Compile Include="Extensions\X509Certificate2Extensions.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Types\CompositeValidationResult.cs" />
+    <Compile Include="Types\NugetEncryptionConfiguration\NugetEncryptionConfiguration.cs" />
+    <Compile Include="Types\NugetEncryptionConfiguration\NugetEncryptionFile.cs" />
+    <Compile Include="Types\NugetEncryptionConfiguration\NugetEncryptionMetadata.cs" />
     <Compile Include="Types\NugetPackageDependencyBehavior.cs" />
-    <Compile Include="Types\NugetDebugPackage.cs" />
-    <Compile Include="Types\NugetDebugSolution.cs" />
+    <Compile Include="Types\NugetDebugConfiguration\NugetDebugPackage.cs" />
+    <Compile Include="Types\NugetDebugConfiguration\NugetDebugSolution.cs" />
     <Compile Include="Types\NugetEnvironment.cs" />
     <Compile Include="Types\NugetExtensionMacroHandler.cs" />
     <Compile Include="Types\NugetPackage.cs" />
-    <Compile Include="Types\NugetDebugConfiguration.cs" />
+    <Compile Include="Types\NugetDebugConfiguration\NugetDebugConfiguration.cs" />
     <Compile Include="Types\NugetPackageDependencyFilter.cs" />
     <Compile Include="Types\NugetPackageFile.cs" />
     <Compile Include="Types\NugetPackageFiles.cs" />
-    <Compile Include="X509Certificate\X509CertificateFileSearch.cs" />
-    <Compile Include="X509Certificate\IX509CertificateSearch.cs" />
-    <Compile Include="X509Certificate\X509CertificateManifestResourceSearch.cs" />
-    <Compile Include="X509Certificate\X509CertificateStorageIdentifier.cs" />
-    <Compile Include="X509Certificate\X509CertificateStorageSearch.cs" />
-    <Compile Include="X509Certificate\X509CertificateStreamSearch.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
@@ -228,6 +223,8 @@
     <Analyzer Include="..\packages\Microsoft.CodeAnalysis.Analyzers.2.6.0\analyzers\dotnet\cs\Microsoft.CodeAnalysis.Analyzers.dll" />
     <Analyzer Include="..\packages\Microsoft.CodeAnalysis.Analyzers.2.6.0\analyzers\dotnet\cs\Microsoft.CodeAnalysis.CSharp.Analyzers.dll" />
   </ItemGroup>
+  <ItemGroup />
+  <Import Project="..\PS.Build.Nuget.Shared\PS.Build.Nuget.Shared.projitems" Label="Shared" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

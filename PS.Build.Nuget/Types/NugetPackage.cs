@@ -34,6 +34,8 @@ namespace PS.Build.Nuget.Types
         public ManifestMetadata Metadata { get; }
 
         public X509Certificate2 X509Certificate { get; set; }
+        public bool X509CertificateExport { get; set; }
+        public string X509CertificatePassword { get; set; }
 
         #endregion
     }

@@ -1,14 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography.X509Certificates;
+using System.Text;
+using Cinegy.Serialization;
 using NuGet.Frameworks;
 using NuGet.Packaging;
 using PS.Build.Extensions;
 using PS.Build.Nuget.Attributes.Base;
 using PS.Build.Nuget.Extensions;
+using PS.Build.Nuget.Shared.Extensions;
+using PS.Build.Nuget.Types;
 using PS.Build.Services;
 using PS.Build.Types;
 using NugetPackage = PS.Build.Nuget.Types.NugetPackage;
@@ -36,8 +40,8 @@ namespace PS.Build.Nuget.Attributes
             {
                 using (logger.IndentMessages())
                 {
-                    logger.Info("Assembly: " + @group.Key);
-                    foreach (var framework in @group)
+                    logger.Info("Assembly: " + group.Key);
+                    foreach (var framework in group)
                     {
                         using (logger.IndentMessages())
                         {
@@ -115,21 +119,21 @@ namespace PS.Build.Nuget.Attributes
                 foreach (var group in includeLookup)
                 {
                     var bannedPackages = new List<string>();
-                    if (excludeLookup.Contains(@group.Key))
+                    if (excludeLookup.Contains(group.Key))
                     {
                         bannedPackages.AddRange(
-                            excludeLookup[@group.Key].SelectMany(
-                                e => PathExtensions.Match(@group.Select(g => g.PackageIdentity.Id), e)));
+                            excludeLookup[group.Key].SelectMany(
+                                e => PathExtensions.Match(group.Select(g => g.PackageIdentity.Id), e)));
                     }
 
                     if (excludeLookup.Contains(NuGetFramework.AnyFramework))
                     {
                         bannedPackages.AddRange(
                             excludeLookup[NuGetFramework.AnyFramework].SelectMany(
-                                e => PathExtensions.Match(@group.Select(g => g.PackageIdentity.Id), e)));
+                                e => PathExtensions.Match(group.Select(g => g.PackageIdentity.Id), e)));
                     }
 
-                    foreach (var reference in @group)
+                    foreach (var reference in group)
                     {
                         if (bannedPackages.Contains(reference.PackageIdentity.Id)) continue;
                         package.Metadata.AddDependency(reference);
@@ -182,22 +186,86 @@ namespace PS.Build.Nuget.Attributes
                 {
                     var build = new PackageBuilder();
                     build.Populate(package.Metadata);
+
+                    var temporaryDirectory = provider.GetService<IExplorer>().Directories[BuildDirectory.Intermediate];
+                    var encryptedFilesDirectory = Path.Combine(temporaryDirectory, "__encrypted");
+                    var encryptKey = Guid.NewGuid().ToString("N");
+
                     var files = package.EnumerateFiles(logger).ToList();
+                    NugetEncryptionConfiguration configuration = null;
 
                     if (files.Any(f => f.Encrypt))
                     {
                         //Ensure encrypt cert exist
-                        X509Certificate2Extensions.Main();
+                        if (package.X509Certificate == null)
+                        {
+                            var message = "Some files requires encryption but encrypt certificate was not set";
+                            throw new InvalidOperationException(message);
+                        }
+
+                        if (package.X509CertificateExport)
+                        {
+                            logger.Debug("Trying to export encryption certificate...");
+                            var certificatePath = Path.Combine(targetDirectory, package.Metadata.Id + "." + package.Metadata.Version + ".pfx");
+
+                            var bytes = string.IsNullOrWhiteSpace(package.X509CertificatePassword)
+                                ? package.X509Certificate.Export(X509ContentType.Pfx)
+                                : package.X509Certificate.Export(X509ContentType.Pfx, package.X509CertificatePassword);
+
+                            File.WriteAllBytes(certificatePath, bytes);
+                            logger.Info("Encryption PFX certificate was exported to target directory");
+                        }
+
+                        encryptedFilesDirectory.EnsureDirectoryExist();
+
+                        configuration = new NugetEncryptionConfiguration
+                        {
+                            Metadata = new NugetEncryptionMetadata
+                            {
+                                Certificate = package.X509Certificate.Thumbprint,
+                                Key = package.X509Certificate.Encrypt(Encoding.UTF8.GetBytes(encryptKey)).ToHexString()
+                            }
+                        };
                     }
 
                     foreach (var file in files)
                     {
                         if (file.Encrypt)
                         {
+                            var sourceFilename = Path.GetFileName(file.Source);
                             //Encrypt file and pack encrypted
-                        }
+                            var encryptedFileContent = File.ReadAllBytes(file.Source).EncryptAES(encryptKey);
+                            // ReSharper disable once AssignNullToNotNullAttribute
+                            var encryptedFilePath = Path.Combine(encryptedFilesDirectory, sourceFilename);
 
-                        build.AddFiles(targetDirectory, file.Source, file.Destination);
+                            //var decryptedFileContent = encryptedFileContent.DecryptAES(encryptKey);
+                            //File.WriteAllBytes(encryptedFilePath + ".decr", decryptedFileContent);
+
+                            File.WriteAllBytes(encryptedFilePath, encryptedFileContent);
+                            var originalHash = file.Source.ComputeHashMD5();
+                            var encryptedHash = encryptedFilePath.ComputeHashMD5();
+                            //var decryptedHash = (encryptedFilePath + ".decr").ComputeHashMD5();
+
+                            build.AddFiles(targetDirectory, encryptedFilePath, file.Destination);
+
+                            configuration?.Files.Add(new NugetEncryptionFile
+                            {
+                                EncryptedHash = encryptedHash,
+                                OriginalHash = originalHash,
+                                Origin = build.Files.LastOrDefault()?.Path
+                            });
+                        }
+                        else
+                        {
+                            build.AddFiles(targetDirectory, file.Source, file.Destination);
+                        }
+                    }
+
+                    if (configuration != null)
+                    {
+                        var encryptionConfigurationFilePath = Path.Combine(encryptedFilesDirectory, "encryption.config");
+                        configuration.SaveXml(encryptionConfigurationFilePath);
+                        build.AddFiles(targetDirectory, encryptionConfigurationFilePath, string.Empty);
                     }
 
                     targetDirectory.EnsureDirectoryExist();
@@ -211,7 +279,6 @@ namespace PS.Build.Nuget.Attributes
                         build.Save(stream);
                     }
 
-                    //Save encrypt certificate near nuget package
                     logger.Info("Package successfully created");
                 }
                 catch (Exception e)
