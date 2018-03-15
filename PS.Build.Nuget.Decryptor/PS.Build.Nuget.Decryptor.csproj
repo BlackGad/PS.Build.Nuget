@@ -1,23 +1,20 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="..\packages\PS.Build.Tasks.1.25.1\build\PS.Build.Tasks.props" Condition="Exists('..\packages\PS.Build.Tasks.1.25.1\build\PS.Build.Tasks.props')" />
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{91C309C6-60B9-44D7-B9AA-268772D1F28C}</ProjectGuid>
-    <OutputType>Library</OutputType>
+    <ProjectGuid>{AE036470-37DA-4AB3-86B1-A79130DF1CBA}</ProjectGuid>
+    <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>PS.Build.Nuget.Artifacts</RootNamespace>
-    <AssemblyName>PS.Build.Nuget.Artifacts</AssemblyName>
+    <RootNamespace>PS.Build.Nuget.Decryptor</RootNamespace>
+    <AssemblyName>Decryptor</AssemblyName>
     <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
-    <NuGetPackageImportStamp>
-    </NuGetPackageImportStamp>
-    <TargetFrameworkProfile />
-    <AdaptationOptionDebug>false</AdaptationOptionDebug>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
@@ -27,6 +24,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
@@ -36,6 +34,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
+    <Reference Include="System.ComponentModel.DataAnnotations" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
@@ -45,34 +44,14 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Content\nuget.package.txt" />
-    <Compile Include="nuget.package.cs" />
+    <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="app.config" />
-    <None Include="packages.config" />
+    <None Include="App.config" />
   </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\PS.Build.Nuget.Decryptor\PS.Build.Nuget.Decryptor.csproj">
-      <Project>{ae036470-37da-4ab3-86b1-a79130df1cba}</Project>
-      <Name>PS.Build.Nuget.Decryptor</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\PS.Build.Nuget\PS.Build.Nuget.csproj">
-      <Project>{81d904e8-749d-4f81-95b3-844a9f00d90c}</Project>
-      <Name>PS.Build.Nuget</Name>
-      <Private>False</Private>
-    </ProjectReference>
-  </ItemGroup>
+  <Import Project="..\PS.Build.Nuget.Shared\PS.Build.Nuget.Shared.projitems" Label="Shared" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
-    <PropertyGroup>
-      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
-    </PropertyGroup>
-    <Error Condition="!Exists('..\packages\PS.Build.Tasks.1.25.1\build\PS.Build.Tasks.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\PS.Build.Tasks.1.25.1\build\PS.Build.Tasks.props'))" />
-    <Error Condition="!Exists('..\packages\PS.Build.Tasks.1.25.1\build\PS.Build.Tasks.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\PS.Build.Tasks.1.25.1\build\PS.Build.Tasks.targets'))" />
-  </Target>
-  <Import Project="..\packages\PS.Build.Tasks.1.25.1\build\PS.Build.Tasks.targets" Condition="Exists('..\packages\PS.Build.Tasks.1.25.1\build\PS.Build.Tasks.targets')" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

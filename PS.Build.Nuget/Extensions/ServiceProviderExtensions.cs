@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using NuGet.Frameworks;
@@ -7,6 +8,7 @@ using NuGet.Packaging;
 using NuGet.Packaging.Core;
 using NuGet.Versioning;
 using PS.Build.Extensions;
+using PS.Build.Nuget.Types;
 using PS.Build.Services;
 using PS.Build.Types;
 using NugetPackage = PS.Build.Nuget.Types.NugetPackage;
@@ -75,20 +77,20 @@ namespace PS.Build.Nuget.Extensions
             collection.Add(name);
         }
 
-        internal static IEnumerable<Tuple<string, string>> EnumerateFiles(this NugetPackage package, ILogger logger)
+        internal static IEnumerable<NugetPackageFile> EnumerateFiles(this NugetPackage package, ILogger logger)
         {
             var includeLookup = package.IncludeFiles
                                        .SelectMany(include => PathExtensions.EnumerateFiles(include.Source)
                                                                             .Select(f => new
                                                                             {
                                                                                 include.Destination,
+                                                                                include.Encrypt,
                                                                                 Source = f
                                                                             }))
-                                       .ToLookup(p => p.Destination.ToLowerInvariant(), p => p.Source);
+                                       .ToLookup(p => p.Destination.ToLowerInvariant(), p => p);
 
             var excludeLookup = package.ExcludeFiles.ToLookup(p => p.Destination.ToLowerInvariant(), p => p.Source);
             logger?.Info("Package files: " + (includeLookup.Any() ? string.Empty : "None"));
-
             foreach (var group in includeLookup)
             {
                 using (logger?.IndentMessages())
@@ -97,21 +99,27 @@ namespace PS.Build.Nuget.Extensions
                     var bannedFiles = new List<string>();
                     if (excludeLookup.Contains(group.Key))
                     {
-                        bannedFiles = excludeLookup[@group.Key].SelectMany(e => PathExtensions.Match(@group, e)).ToList();
+                        bannedFiles = excludeLookup[@group.Key].SelectMany(e => PathExtensions.Match(@group.Select(g => g.Source), e)).ToList();
                     }
 
                     foreach (var file in group)
                     {
                         using (logger?.IndentMessages())
                         {
-                            if (!bannedFiles.Contains(file))
+                            if (!bannedFiles.Contains(file.Source))
                             {
-                                yield return new Tuple<string, string>(file, group.Key);
-                                logger?.Info("+ File: " + file);
+                                yield return new NugetPackageFile
+                                {
+                                    Source = file.Source,
+                                    Destination = group.Key,
+                                    Encrypt = file.Encrypt
+                                };
+
+                                logger?.Info("+ File: " + file.Source);
                             }
                             else
                             {
-                                logger?.Info("- File: " + file);
+                                logger?.Info("- File: " + file.Source);
                             }
                         }
                     }

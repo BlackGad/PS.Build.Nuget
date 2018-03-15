@@ -33,6 +33,11 @@ namespace PS.Build.Nuget.Attributes
         #region Properties
 
         /// <summary>
+        ///     Encrypt files before packing.
+        /// </summary>
+        public bool Encrypt { get; set; }
+
+        /// <summary>
         ///     Add target xml documentation as well.
         /// </summary>
         public bool IncludeDocumentation { get; set; }
@@ -84,7 +89,7 @@ namespace PS.Build.Nuget.Attributes
 
                 foreach (var file in files)
                 {
-                    package.IncludeFiles.Add(new NugetPackageFiles(file, destinationDirectory));
+                    package.IncludeFiles.Add(new NugetPackageFiles(file, destinationDirectory, Encrypt));
                 }
             }
             catch (Exception e)

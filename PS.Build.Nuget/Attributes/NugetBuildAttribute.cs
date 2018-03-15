@@ -1,14 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography.X509Certificates;
 using NuGet.Frameworks;
 using NuGet.Packaging;
 using PS.Build.Extensions;
 using PS.Build.Nuget.Attributes.Base;
 using PS.Build.Nuget.Extensions;
+using PS.Build.Nuget.Types;
 using PS.Build.Services;
 using PS.Build.Types;
 using NugetPackage = PS.Build.Nuget.Types.NugetPackage;
@@ -36,8 +37,8 @@ namespace PS.Build.Nuget.Attributes
             {
                 using (logger.IndentMessages())
                 {
-                    logger.Info("Assembly: " + @group.Key);
-                    foreach (var framework in @group)
+                    logger.Info("Assembly: " + group.Key);
+                    foreach (var framework in group)
                     {
                         using (logger.IndentMessages())
                         {
@@ -115,21 +116,21 @@ namespace PS.Build.Nuget.Attributes
                 foreach (var group in includeLookup)
                 {
                     var bannedPackages = new List<string>();
-                    if (excludeLookup.Contains(@group.Key))
+                    if (excludeLookup.Contains(group.Key))
                     {
                         bannedPackages.AddRange(
-                            excludeLookup[@group.Key].SelectMany(
-                                e => PathExtensions.Match(@group.Select(g => g.PackageIdentity.Id), e)));
+                            excludeLookup[group.Key].SelectMany(
+                                e => PathExtensions.Match(group.Select(g => g.PackageIdentity.Id), e)));
                     }
 
                     if (excludeLookup.Contains(NuGetFramework.AnyFramework))
                     {
                         bannedPackages.AddRange(
                             excludeLookup[NuGetFramework.AnyFramework].SelectMany(
-                                e => PathExtensions.Match(@group.Select(g => g.PackageIdentity.Id), e)));
+                                e => PathExtensions.Match(group.Select(g => g.PackageIdentity.Id), e)));
                     }
 
-                    foreach (var reference in @group)
+                    foreach (var reference in group)
                     {
                         if (bannedPackages.Contains(reference.PackageIdentity.Id)) continue;
                         package.Metadata.AddDependency(reference);
@@ -180,14 +181,58 @@ namespace PS.Build.Nuget.Attributes
 
                 try
                 {
+                    targetDirectory.EnsureDirectoryExist();
+
                     var build = new PackageBuilder();
                     build.Populate(package.Metadata);
-                    foreach (var tuple in package.EnumerateFiles(logger))
+
+                    var temporaryDirectory = provider.GetService<IExplorer>().Directories[BuildDirectory.Intermediate];
+                    var files = package.EnumerateFiles(logger).ToList();
+
+                    if (files.Any(f => f.Encrypt) && package.X509Certificate == null)
                     {
-                        build.AddFiles(targetDirectory, tuple.Item1, tuple.Item2);
+                        var message = "Some files requires encryption but encrypt certificate was not set";
+                        throw new InvalidOperationException(message);
                     }
 
-                    targetDirectory.EnsureDirectoryExist();
+                    var encryptionSession = new EncryptionSession(temporaryDirectory, package.X509Certificate);
+
+                    foreach (var file in files)
+                    {
+                        if (file.Encrypt)
+                        {
+                            var encryptedFilePath = encryptionSession.ProduceEncryptedFilePath(file.Source);
+                            build.AddFiles(targetDirectory, encryptedFilePath, file.Destination);
+                            encryptionSession.EncryptFile(file.Source, build.Files.LastOrDefault()?.Path, encryptedFilePath);
+                        }
+                        else
+                        {
+                            build.AddFiles(targetDirectory, file.Source, file.Destination);
+                        }
+                    }
+
+                    if (encryptionSession.Configuration.Files.Any())
+                    {
+                        build.AddFiles(targetDirectory, encryptionSession.SaveConfiguration(), string.Empty);
+
+                        var buildNugetPackageFolder = provider.GetService<IMacroResolver>().Resolve("{nuget.PS.Build.Nuget}") ?? string.Empty;
+                        var decryptorFilePath = Path.Combine(buildNugetPackageFolder, @"tools\decryptor.exe");
+                        if (!File.Exists(decryptorFilePath)) throw new FileNotFoundException("Decryptor tool was not found.", decryptorFilePath);
+                        build.AddFiles(targetDirectory, decryptorFilePath, string.Empty);
+
+                        if (package.X509CertificateExport)
+                        {
+                            logger.Debug("Trying to export encryption certificate...");
+                            var certificatePath = Path.Combine(targetDirectory, package.Metadata.Id + "." + package.Metadata.Version + ".pfx");
+
+                            var bytes = string.IsNullOrWhiteSpace(package.X509CertificatePassword)
+                                ? package.X509Certificate.Export(X509ContentType.Pfx)
+                                : package.X509Certificate.Export(X509ContentType.Pfx, package.X509CertificatePassword);
+
+                            File.WriteAllBytes(certificatePath, bytes);
+                            logger.Info("Encryption PFX certificate was exported to target directory");
+                        }
+                    }
 
                     var finalPath = Path.Combine(targetDirectory, package.Metadata.Id + "." + package.Metadata.Version + ".nupkg");
                     if (File.Exists(finalPath)) File.Delete(finalPath);
@@ -197,6 +242,7 @@ namespace PS.Build.Nuget.Attributes
                         logger.Debug("Building...");
                         build.Save(stream);
                     }
+
                     logger.Info("Package successfully created");
                 }
                 catch (Exception e)

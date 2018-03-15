@@ -103,3 +103,9 @@ using PS.Build.Nuget.Attributes;
 // By default it is solution folder).
 // Also you can specify generateTemplateFile option that will automatically create/modify configuration file and place there placeholder for specified NuGet package ID.
 [assembly: NugetDebugSubstitution]
+
+// Instruction to setup package file encryption certificate from User/PC storage
+[assembly: NugetFilesEncryptionCertificate(StoreLocation.CurrentUser, StoreName.AddressBook, X509FindType.FindByApplicationPolicy, "some key")]
+
+// Instruction to setup package file encryption certificate from file
+[assembly: NugetFilesEncryptionCertificate(@"{dir.solution}\cert.pfx", "pfx_password")]
