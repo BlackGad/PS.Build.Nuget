@@ -3,9 +3,8 @@ using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
-using PS.Build.Extensions;
 
-namespace Cinegy.Serialization
+namespace PS.Build.Nuget.Shared.Extensions
 {
     public static class AESExtensions
     {
@@ -25,7 +24,7 @@ namespace Cinegy.Serialization
         /// <param name="sharedSecret">A password used to generate a key for decryption.</param>
         public static byte[] DecryptAES(this byte[] encryptedData, string sharedSecret)
         {
-            encryptedData = encryptedData.Enumerate().ToArray();
+            encryptedData = encryptedData ?? Enumerable.Empty<byte>().ToArray();
             if (string.IsNullOrEmpty(sharedSecret))
                 throw new ArgumentNullException(nameof(sharedSecret));
 
@@ -77,7 +76,7 @@ namespace Cinegy.Serialization
         /// <param name="sharedSecret">A password used to generate a key for encryption.</param>
         public static byte[] EncryptAES(this byte[] data, string sharedSecret)
         {
-            data = data.Enumerate().ToArray();
+            data = data ?? Enumerable.Empty<byte>().ToArray();
             if (string.IsNullOrEmpty(sharedSecret)) throw new ArgumentNullException(nameof(sharedSecret));
 
             RijndaelManaged aesAlg = null; // RijndaelManaged object used to encrypt the data.

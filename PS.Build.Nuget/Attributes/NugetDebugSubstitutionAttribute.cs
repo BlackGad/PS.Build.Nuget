@@ -6,6 +6,7 @@ using System.Linq;
 using PS.Build.Extensions;
 using PS.Build.Nuget.Attributes.Base;
 using PS.Build.Nuget.Extensions;
+using PS.Build.Nuget.Shared.Extensions;
 using PS.Build.Nuget.Types;
 using PS.Build.Services;
 using PS.Build.Types;

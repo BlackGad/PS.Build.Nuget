@@ -102,7 +102,7 @@ namespace PS.Build.Nuget.Attributes
                     var path = resolver.Resolve(_certificateFilePath);
                     if (!File.Exists(path))
                     {
-                        var newCertificate = X509Certificate2Extensions.CreateSelfSignedCertificate("CN=" + package.Metadata.Id, "CN=PS.Build.Nuget");
+                        var newCertificate = X509Certificate2CreateExtensions.CreateSelfSignedCertificate("CN=" + package.Metadata.Id, "CN=PS.Build.Nuget");
                         var bytes = string.IsNullOrWhiteSpace(_password)
                             ? newCertificate.Export(X509ContentType.Pfx)
                             : newCertificate.Export(X509ContentType.Pfx, _password);

@@ -54,6 +54,10 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\PS.Build.Nuget.Decryptor\PS.Build.Nuget.Decryptor.csproj">
+      <Project>{ae036470-37da-4ab3-86b1-a79130df1cba}</Project>
+      <Name>PS.Build.Nuget.Decryptor</Name>
+    </ProjectReference>
     <ProjectReference Include="..\PS.Build.Nuget\PS.Build.Nuget.csproj">
       <Project>{81d904e8-749d-4f81-95b3-844a9f00d90c}</Project>
       <Name>PS.Build.Nuget</Name>

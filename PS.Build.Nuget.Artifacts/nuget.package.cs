@@ -1,5 +1,4 @@
-﻿using System.Security.Cryptography.X509Certificates;
-using PS.Build.Nuget.Attributes;
+﻿using PS.Build.Nuget.Attributes;
 
 [assembly: Nuget(Title = "PS.Build Nuget Adaptation", ID = "PS.Build.Nuget")]
 [assembly: Nuget(ProjectUrl = "https://github.com/BlackGad/PS.Build.Nuget", ID = "PS.Build.Nuget")]
@@ -11,15 +10,8 @@ using PS.Build.Nuget.Attributes;
     @"{dir.solution}\PS.Build.Nuget\bin\{prop.configuration}\BouncyCastle.Crypto.dll",
     @"lib\{nuget.framework}",
     ID = "PS.Build.Nuget")]
-[assembly: NugetFiles(@"{dir.project}\Content\**.\*.*", @"content", true, ID = "PS.Build.Nuget")]
-//[assembly: NugetFilesEncryptionCertificate(
-//    StoreLocation.CurrentUser,
-//    StoreName.AddressBook,
-//    X509FindType.FindByApplicationPolicy,
-//    "s")]
-
-[assembly: NugetFilesEncryptionCertificate(@"{dir.solution}\PS.Build.Nuget.pfx", null, ID = "PS.Build.Nuget")]
-
+[assembly: NugetFiles(@"{dir.project}\Content\**.\*.*", @"content", ID = "PS.Build.Nuget")]
+[assembly: NugetFiles(@"{dir.solution}\PS.Build.Nuget.Decryptor\bin\{prop.configuration}\Decryptor.exe", @"tools", ID = "PS.Build.Nuget")]
 [assembly: NugetPackageAssemblyReference(@"PS.Build.Nuget.dll", ID = "PS.Build.Nuget")]
 [assembly: NugetBuild(@"{dir.solution}_Artifacts\{prop.configuration}.{prop.platform}", ID = "PS.Build.Nuget")]
 [assembly: NugetDebugSubstitution(ID = "PS.Build.Nuget")]

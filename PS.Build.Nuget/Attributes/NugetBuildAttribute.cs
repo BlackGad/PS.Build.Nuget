@@ -4,14 +4,11 @@ using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
-using System.Text;
-using Cinegy.Serialization;
 using NuGet.Frameworks;
 using NuGet.Packaging;
 using PS.Build.Extensions;
 using PS.Build.Nuget.Attributes.Base;
 using PS.Build.Nuget.Extensions;
-using PS.Build.Nuget.Shared.Extensions;
 using PS.Build.Nuget.Types;
 using PS.Build.Services;
 using PS.Build.Types;
@@ -190,20 +187,38 @@ namespace PS.Build.Nuget.Attributes
                     build.Populate(package.Metadata);
 
                     var temporaryDirectory = provider.GetService<IExplorer>().Directories[BuildDirectory.Intermediate];
-                    var encryptedFilesDirectory = Path.Combine(temporaryDirectory, "__encrypted");
-                    var encryptKey = Guid.NewGuid().ToString("N");
-
                     var files = package.EnumerateFiles(logger).ToList();
-                    NugetEncryptionConfiguration configuration = null;
 
-                    if (files.Any(f => f.Encrypt))
+                    if (files.Any(f => f.Encrypt) && package.X509Certificate == null)
                     {
-                        //Ensure encrypt cert exist
-                        if (package.X509Certificate == null)
+                        var message = "Some files requires encryption but encrypt certificate was not set";
+                        throw new InvalidOperationException(message);
+                    }
+
+                    var encryptionSession = new EncryptionSession(temporaryDirectory, package.X509Certificate);
+
+                    foreach (var file in files)
+                    {
+                        if (file.Encrypt)
                         {
-                            var message = "Some files requires encryption but encrypt certificate was not set";
-                            throw new InvalidOperationException(message);
+                            var encryptedFilePath = encryptionSession.ProduceEncryptedFilePath(file.Source);
+                            build.AddFiles(targetDirectory, encryptedFilePath, file.Destination);
+                            encryptionSession.EncryptFile(file.Source, build.Files.LastOrDefault()?.Path, encryptedFilePath);
                         }
+                        else
+                        {
+                            build.AddFiles(targetDirectory, file.Source, file.Destination);
+                        }
+                    }
+
+                    if (encryptionSession.Configuration.Files.Any())
+                    {
+                        build.AddFiles(targetDirectory, encryptionSession.SaveConfiguration(), string.Empty);
+
+                        var buildNugetPackageFolder = provider.GetService<IMacroResolver>().Resolve("{nuget.PS.Build.Nuget}") ?? string.Empty;
+                        var decryptorFilePath = Path.Combine(buildNugetPackageFolder, @"tools\decryptor.exe");
+                        if (!File.Exists(decryptorFilePath)) throw new FileNotFoundException("Decryptor tool was not found.", decryptorFilePath);
+                        build.AddFiles(targetDirectory, decryptorFilePath, string.Empty);
 
                         if (package.X509CertificateExport)
                         {
@@ -217,57 +232,6 @@ namespace PS.Build.Nuget.Attributes
                             File.WriteAllBytes(certificatePath, bytes);
                             logger.Info("Encryption PFX certificate was exported to target directory");
                         }
-
-                        encryptedFilesDirectory.EnsureDirectoryExist();
-
-                        configuration = new NugetEncryptionConfiguration
-                        {
-                            Metadata = new NugetEncryptionMetadata
-                            {
-                                Certificate = package.X509Certificate.Thumbprint,
-                                Key = package.X509Certificate.Encrypt(Encoding.UTF8.GetBytes(encryptKey)).ToHexString()
-                            }
-                        };
-                    }
-
-                    foreach (var file in files)
-                    {
-                        if (file.Encrypt)
-                        {
-                            var sourceFilename = Path.GetFileName(file.Source);
-                            //Encrypt file and pack encrypted
-                            var encryptedFileContent = File.ReadAllBytes(file.Source).EncryptAES(encryptKey);
-                            // ReSharper disable once AssignNullToNotNullAttribute
-                            var encryptedFilePath = Path.Combine(encryptedFilesDirectory, sourceFilename);
-
-                            //var decryptedFileContent = encryptedFileContent.DecryptAES(encryptKey);
-                            //File.WriteAllBytes(encryptedFilePath + ".decr", decryptedFileContent);
-
-                            File.WriteAllBytes(encryptedFilePath, encryptedFileContent);
-                            var originalHash = file.Source.ComputeHashMD5();
-                            var encryptedHash = encryptedFilePath.ComputeHashMD5();
-                            //var decryptedHash = (encryptedFilePath + ".decr").ComputeHashMD5();
-
-                            build.AddFiles(targetDirectory, encryptedFilePath, file.Destination);
-
-                            configuration?.Files.Add(new NugetEncryptionFile
-                            {
-                                EncryptedHash = encryptedHash,
-                                OriginalHash = originalHash,
-                                Origin = build.Files.LastOrDefault()?.Path
-                            });
-                        }
-                        else
-                        {
-                            build.AddFiles(targetDirectory, file.Source, file.Destination);
-                        }
-                    }
-
-                    if (configuration != null)
-                    {
-                        var encryptionConfigurationFilePath = Path.Combine(encryptedFilesDirectory, "encryption.config");
-                        configuration.SaveXml(encryptionConfigurationFilePath);
-                        build.AddFiles(targetDirectory, encryptionConfigurationFilePath, string.Empty);
                     }
 
                     var finalPath = Path.Combine(targetDirectory, package.Metadata.Id + "." + package.Metadata.Version + ".nupkg");

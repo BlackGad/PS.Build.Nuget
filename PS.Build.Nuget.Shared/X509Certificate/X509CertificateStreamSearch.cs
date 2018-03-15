@@ -1,29 +1,12 @@
 using System.ComponentModel.DataAnnotations;
 using System.IO;
 using System.Security.Cryptography.X509Certificates;
+using PS.Build.Nuget.Shared.Extensions;
 
 namespace PS.Build.Nuget.X509Certificate
 {
     public abstract class X509CertificateStreamSearch : IX509CertificateSearch
     {
-        #region Static members
-
-        private static byte[] ReadStream(Stream input)
-        {
-            var buffer = new byte[16*1024];
-            using (var ms = new MemoryStream())
-            {
-                int read;
-                while ((read = input.Read(buffer, 0, buffer.Length)) > 0)
-                {
-                    ms.Write(buffer, 0, read);
-                }
-                return ms.ToArray();
-            }
-        }
-
-        #endregion
-
         #region Properties
 
         [Display(
@@ -41,7 +24,7 @@ namespace PS.Build.Nuget.X509Certificate
         {
             using (var stream = GetStream())
             {
-                return new[] { new X509Certificate2(ReadStream(stream), Password, X509KeyStorageFlags.Exportable) };
+                return new[] { new X509Certificate2(stream.ReadStream(), Password, X509KeyStorageFlags.Exportable) };
             }
         }
 

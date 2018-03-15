@@ -1,7 +1,7 @@
 ﻿using System.IO;
 using System.Xml.Serialization;
 
-namespace PS.Build.Nuget.Extensions
+namespace PS.Build.Nuget.Shared.Extensions
 {
     public static class SerializationExtensions
     {

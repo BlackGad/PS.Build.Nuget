@@ -195,15 +195,13 @@
     <Compile Include="Attributes\NugetPackageDependenciesFromConfigurationAttribute.cs" />
     <Compile Include="Attributes\NugetPackageDependencyAttribute.cs" />
     <Compile Include="Attributes\NugetPackageDependenciesFilterAttribute.cs" />
+    <Compile Include="Extensions\X509Certificate2CreateExtensions.cs" />
     <Compile Include="Extensions\PathExtensions.cs" />
     <Compile Include="Extensions\RoslynExtensions.cs" />
-    <Compile Include="Extensions\SerializationExtensions.cs" />
     <Compile Include="Extensions\ServiceProviderExtensions.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Types\EncryptionSession.cs" />
     <Compile Include="Types\CompositeValidationResult.cs" />
-    <Compile Include="Types\NugetEncryptionConfiguration\NugetEncryptionConfiguration.cs" />
-    <Compile Include="Types\NugetEncryptionConfiguration\NugetEncryptionFile.cs" />
-    <Compile Include="Types\NugetEncryptionConfiguration\NugetEncryptionMetadata.cs" />
     <Compile Include="Types\NugetPackageDependencyBehavior.cs" />
     <Compile Include="Types\NugetDebugConfiguration\NugetDebugPackage.cs" />
     <Compile Include="Types\NugetDebugConfiguration\NugetDebugSolution.cs" />

@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Xml.Serialization;
 
-namespace PS.Build.Nuget.Types
+namespace PS.Build.Nuget.Shared.Sources
 {
     [XmlRoot("configuration")]
     public class NugetEncryptionConfiguration

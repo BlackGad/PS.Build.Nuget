@@ -1,6 +1,6 @@
 ﻿using System.Xml.Serialization;
 
-namespace PS.Build.Nuget.Types
+namespace PS.Build.Nuget.Shared.Sources
 {
     [XmlRoot("file")]
     public class NugetEncryptionFile
@@ -12,6 +12,9 @@ namespace PS.Build.Nuget.Types
 
         [XmlElement("path")]
         public string Origin { get; set; }
+
+        [XmlElement("type")]
+        public NugetEncryptionFileType Type { get; set; }
 
         [XmlElement("original")]
         public string OriginalHash { get; set; }

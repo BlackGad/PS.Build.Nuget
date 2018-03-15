@@ -1,6 +1,6 @@
 ﻿using System.Xml.Serialization;
 
-namespace PS.Build.Nuget.Types
+namespace PS.Build.Nuget.Shared.Sources
 {
     [XmlRoot("metadata")]
     public class NugetEncryptionMetadata
