@@ -1,11 +1,12 @@
 using System.ComponentModel.DataAnnotations;
 using System.IO;
 using System.Security.Cryptography.X509Certificates;
+using System.Xml.Serialization;
 using PS.Build.Nuget.Shared.Extensions;
 
 namespace PS.Build.Nuget.X509Certificate
 {
-    public abstract class X509CertificateStreamSearch : IX509CertificateSearch
+    public abstract class X509CertificateStreamSearch : X509CertificateSearch
     {
         #region Properties
 
@@ -14,13 +15,14 @@ namespace PS.Build.Nuget.X509Certificate
             GroupName = "Generic",
             Order = 100,
             Description = "PFX container password")]
+        [XmlAttribute("password")]
         public string Password { get; set; }
 
         #endregion
 
-        #region IX509CertificateSearch Members
+        #region X509CertificateSearch Members
 
-        public X509Certificate2[] Search()
+        public override X509Certificate2[] Search()
         {
             using (var stream = GetStream())
             {

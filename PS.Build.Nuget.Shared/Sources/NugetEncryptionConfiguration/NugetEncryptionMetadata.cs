@@ -13,6 +13,9 @@ namespace PS.Build.Nuget.Shared.Sources
         [XmlElement("key")]
         public string Key { get; set; }
 
+        [XmlElement("id")]
+        public string ID { get; set; }
+
         #endregion
     }
 }

@@ -196,7 +196,7 @@ namespace PS.Build.Nuget.Attributes
                         throw new InvalidOperationException(message);
                     }
 
-                    var encryptionSession = new EncryptionSession(temporaryDirectory, package.X509Certificate);
+                    var encryptionSession = new EncryptionSession(package.Metadata.Id, temporaryDirectory, package.X509Certificate);
 
                     foreach (var file in files)
                     {

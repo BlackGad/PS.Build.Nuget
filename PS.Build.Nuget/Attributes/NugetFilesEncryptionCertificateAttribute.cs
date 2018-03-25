@@ -1,6 +1,5 @@
 using System;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -23,7 +22,7 @@ namespace PS.Build.Nuget.Attributes
         private readonly string _assemblyFilePath;
         private readonly string _certificateFilePath;
         private readonly X509FindType _findType;
-        private readonly object _findValue;
+        private readonly string _findValue;
         private readonly string _password;
         private readonly string _resourceName;
 
@@ -33,7 +32,7 @@ namespace PS.Build.Nuget.Attributes
 
         #region Constructors
 
-        public NugetFilesEncryptionCertificateAttribute(StoreLocation storeLocation, StoreName storeName, X509FindType findType, object findValue)
+        public NugetFilesEncryptionCertificateAttribute(StoreLocation storeLocation, StoreName storeName, X509FindType findType, string findValue)
         {
             _storeLocation = storeLocation;
             _storeName = storeName;
@@ -87,7 +86,7 @@ namespace PS.Build.Nuget.Attributes
                 logger.Info("Searching security certificate");
                 var package = provider.GetVaultPackage(ID);
 
-                IX509CertificateSearch search = null;
+                X509CertificateSearch search = null;
                 if (_searchType == typeof(X509CertificateManifestResourceSearch))
                 {
                     var resolvedAssemblyFilePath = resolver.Resolve(_assemblyFilePath);

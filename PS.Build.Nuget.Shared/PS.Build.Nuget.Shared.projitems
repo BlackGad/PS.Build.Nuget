@@ -16,11 +16,13 @@
     <Compile Include="$(MSBuildThisFileDirectory)Extensions\X509Certificate2Extensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Sources\CompilationMode.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Sources\DelegateDisposable.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Sources\NugetCertificateConfiguration\NugetCertificateConfiguration.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Sources\NugetCertificateConfiguration\NugetCertificatePackage.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Sources\NugetEncryptionConfiguration\NugetEncryptionConfiguration.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Sources\NugetEncryptionConfiguration\NugetEncryptionFile.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Sources\NugetEncryptionConfiguration\NugetEncryptionFileType.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Sources\NugetEncryptionConfiguration\NugetEncryptionMetadata.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)X509Certificate\IX509CertificateSearch.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)X509Certificate\X509CertificateSearch.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)X509Certificate\X509CertificateFileSearch.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)X509Certificate\X509CertificateManifestResourceSearch.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)X509Certificate\X509CertificateStorageIdentifier.cs" />

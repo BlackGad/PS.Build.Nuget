@@ -15,7 +15,7 @@ namespace PS.Build.Nuget.Types
     {
         #region Constructors
 
-        public EncryptionSession(string temporaryDirectory, X509Certificate2 certificate)
+        public EncryptionSession(string packageId, string temporaryDirectory, X509Certificate2 certificate)
         {
             EncryptionKey = Guid.NewGuid().ToString("N");
             EncryptedFilesDirectory = Path.Combine(temporaryDirectory, "__encrypted");
@@ -25,6 +25,7 @@ namespace PS.Build.Nuget.Types
             {
                 Metadata = new NugetEncryptionMetadata
                 {
+                    ID = packageId,
                     Certificate = certificate?.Thumbprint,
                     Key = certificate?.Encrypt(Encoding.UTF8.GetBytes(EncryptionKey)).ToHexString()
                 }

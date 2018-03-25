@@ -16,6 +16,66 @@ namespace PS.Build.Nuget.Decryptor
     {
         #region Static members
 
+        public static X509CertificateSearch CertificatePackageConfigurationLoad(NugetEncryptionConfiguration encryptionConfiguration,
+                                                                                string certificateConfigurationLocation)
+        {
+            var directSearch = !string.IsNullOrWhiteSpace(certificateConfigurationLocation);
+            if (!directSearch)
+            {
+                Console.WriteLine("Trying to search default configuration...");
+                certificateConfigurationLocation = Path.Combine(Environment.CurrentDirectory, "NuGet.Encryption.config");
+            }
+
+            try
+            {
+                var file = new FileInfo(certificateConfigurationLocation);
+                do
+                {
+                    Console.WriteLine($"Trying to load configuration from {file.FullName}");
+                    if (file.Exists)
+                    {
+                        Console.WriteLine("File exist. Trying to load certificate configuration...");
+                        try
+                        {
+                            var certificateConfiguration = file.FullName.LoadXml<NugetCertificateConfiguration>();
+                            Console.WriteLine("Configuration loaded. Trying to find required package configuration by id...");
+                            certificateConfiguration.Packages = certificateConfiguration.Packages ?? new List<NugetCertificatePackage>();
+                            var packageCertificate = certificateConfiguration
+                                .Packages
+                                .FirstOrDefault(p => string.Equals(p.ID,
+                                                                   encryptionConfiguration.Metadata.ID,
+                                                                   StringComparison.InvariantCultureIgnoreCase));
+
+                            if (packageCertificate != null)
+                            {
+                                Console.WriteLine("Package configuration found.");
+                                return packageCertificate.Search;
+                            }
+                            Console.WriteLine("Package configuration not found.");
+                        }
+                        catch (Exception)
+                        {
+                            Console.WriteLine("Configuration file is invalid.");
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine("File not exist");
+                    }
+
+                    var directory = file.Directory;
+                    if (directSearch || directory?.Parent == null) break;
+                    file = new FileInfo(Path.Combine(directory.Parent.FullName, file.Name));
+                } while (true);
+            }
+            catch (Exception)
+            {
+                //Nothing
+            }
+
+            return null;
+        }
+
         public static IEnumerable<NugetEncryptionFile> ConfigurationGetEncryptedFiles(string configurationFolder,
                                                                                       NugetEncryptionConfiguration configuration)
         {
@@ -103,7 +163,7 @@ namespace PS.Build.Nuget.Decryptor
             }
 
             Console.WriteLine("File is encrypted.");
-            
+
             var decryptedContent = encryptedContent.DecryptAES(Encoding.UTF8.GetString(aesKey));
             var decryptedFilePath = filePath + ".decrypted";
 
@@ -126,7 +186,7 @@ namespace PS.Build.Nuget.Decryptor
             var configurationLocation = ParseArgument("-config", args) ??
                                         Path.Combine(Environment.CurrentDirectory, "encryption.config");
 
-            var certificateFileLocation = ParseArgument("-cFile", args);
+            var certificateLocation = ParseArgument("-certificate", args);
 
             try
             {
@@ -150,47 +210,16 @@ namespace PS.Build.Nuget.Decryptor
                 if (string.IsNullOrWhiteSpace(configuration.Metadata?.Key))
                     throw new ArgumentException("Configuration metadata encryption key corrupted");
 
-                IX509CertificateSearch search;
-                if (certificateFileLocation != null)
+                var search = CertificatePackageConfigurationLoad(configuration, certificateLocation);
+                if (search == null)
                 {
-                    if (!File.Exists(certificateFileLocation)) throw new ArgumentException($"Could not find {certificateFileLocation} certificate");
-                    var password = ParseArgument("-cFilePassword", args);
-
-                    Console.WriteLine($"Loading certificate from {certificateFileLocation} file");
-                    if (!string.IsNullOrEmpty(password)) Console.WriteLine("With password");
-
-                    search = new X509CertificateFileSearch
-                    {
-                        SourceFile = certificateFileLocation,
-                        Password = password
-                    };
-                }
-                else
-                {
-                    var certificateStoreLocation = ParseArgument("-cLocation", args);
-
-                    var storeLocation = StoreLocation.CurrentUser;
-                    if (certificateStoreLocation != null && !Enum.TryParse(certificateStoreLocation, true, out storeLocation))
-                    {
-                        throw new ArgumentException($"{certificateStoreLocation} certificate store location is not recognizaed");
-                    }
-
-                    var certificateStoreName = ParseArgument("-cName", args);
-
-                    var storeName = StoreName.My;
-                    if (certificateStoreName != null && !Enum.TryParse(certificateStoreName, true, out storeName))
-                    {
-                        throw new ArgumentException($"{certificateStoreName} certificate store name is not recognizaed");
-                    }
-
-                    Console.WriteLine($"Loading certificate from {storeLocation}.{storeName} store");
-
+                    Console.WriteLine("Package certificate configuration not found. Using default configuration.");
                     search = new X509CertificateStorageSearch
                     {
-                        StoreLocation = storeLocation,
-                        StoreName = storeName,
+                        StoreLocation = StoreLocation.CurrentUser,
+                        StoreName = StoreName.My,
                         FindType = X509FindType.FindByThumbprint,
-                        FindValue = configuration.Metadata?.Certificate
+                        FindValue = configuration.Metadata.Certificate
                     };
                 }
 
