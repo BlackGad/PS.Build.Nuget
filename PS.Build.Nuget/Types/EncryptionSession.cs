@@ -48,9 +48,8 @@ namespace PS.Build.Nuget.Types
         ///     Encrypt file
         /// </summary>
         /// <param name="filePath">Source file path</param>
-        /// <param name="fileOrigin">File origin in package</param>
         /// <param name="encryptedFilePath">Encrypted file path</param>
-        public void EncryptFile(string filePath, string fileOrigin, string encryptedFilePath)
+        public NugetEncryptionFile EncryptFile(string filePath, string encryptedFilePath)
         {
             var encryptedFileContent = File.ReadAllBytes(filePath).EncryptAES(EncryptionKey);
 
@@ -58,7 +57,6 @@ namespace PS.Build.Nuget.Types
             {
                 EncryptedHash = encryptedFileContent.ComputeHashMD5(),
                 OriginalHash = filePath.ComputeHashMD5(),
-                Origin = fileOrigin,
                 Type = NugetEncryptionFileType.Direct
             };
 
@@ -89,14 +87,7 @@ namespace PS.Build.Nuget.Types
             }
 
             Configuration.Files.Add(encryptionFile);
-        }
-
-        public string ProduceEncryptedFilePath(string filePath)
-        {
-            var sourceFilename = Path.GetFileName(filePath);
-            // ReSharper disable once AssignNullToNotNullAttribute
-            var encryptedFilePath = Path.Combine(EncryptedFilesDirectory, sourceFilename);
-            return encryptedFilePath;
+            return encryptionFile;
         }
 
         public string SaveConfiguration()

@@ -16,7 +16,6 @@ namespace PS.Build.Nuget.Attributes
     public sealed class NugetFilesAttribute : BaseNugetAttribute
     {
         private readonly string _destination;
-        private readonly bool _encrypt;
         private readonly string _source;
 
         #region Constructors
@@ -34,17 +33,19 @@ namespace PS.Build.Nuget.Attributes
         ///     could begin with lib, content, build, or tools. Macro resolver service and wildcards '*', '**' and '?' are
         ///     supported.
         /// </param>
-        /// <param name="encrypt">
-        ///     Encrypt files before packing
-        /// </param>
-        public NugetFilesAttribute(string source, string destination, bool encrypt = false)
+        public NugetFilesAttribute(string source, string destination)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (destination == null) throw new ArgumentNullException(nameof(destination));
             _source = source;
             _destination = destination;
-            _encrypt = encrypt;
         }
+
+        #endregion
+
+        #region Properties
+
+        public bool Encrypt { get; set; }
 
         #endregion
 
@@ -61,7 +62,7 @@ namespace PS.Build.Nuget.Attributes
                 var resolver = provider.GetService<IMacroResolver>();
                 package.IncludeFiles.Add(new NugetPackageFiles(resolver.Resolve(_source),
                                                                resolver.Resolve(_destination),
-                                                               _encrypt));
+                                                               Encrypt));
             }
             catch (Exception e)
             {

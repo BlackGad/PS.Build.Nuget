@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using NuGet.Frameworks;
 using NuGet.Packaging;
@@ -201,9 +202,13 @@ namespace PS.Build.Nuget.Attributes
                     {
                         if (file.Encrypt)
                         {
-                            var encryptedFilePath = encryptionSession.ProduceEncryptedFilePath(file.Source);
+                            var encryptedFilePath = Path.Combine(encryptionSession.EncryptedFilesDirectory,
+                                                                 Path.GetFileName(file.Source) ?? string.Empty);
+
+                            var encryptionFile = encryptionSession.EncryptFile(file.Source, encryptedFilePath);
                             build.AddFiles(targetDirectory, encryptedFilePath, file.Destination);
-                            encryptionSession.EncryptFile(file.Source, build.Files.LastOrDefault()?.Path, encryptedFilePath);
+
+                            encryptionFile.Origin = build.Files.LastOrDefault()?.Path;
                         }
                         else
                         {
@@ -222,6 +227,20 @@ namespace PS.Build.Nuget.Attributes
 
                         if (package.X509CertificateExport)
                         {
+                            logger.Debug("Exporting encryption certificate...");
+                            var cryptoProvider = package.X509Certificate.PrivateKey as RSACryptoServiceProvider;
+                            if (cryptoProvider == null)
+                            {
+                                var message = "Certificate private key is unavailable. Certificate cannot be exported.";
+                                throw new InvalidOperationException(message);
+                            }
+
+                            if (!cryptoProvider.CspKeyContainerInfo.Exportable)
+                            {
+                                var message = "Encryption certificate is not exportable. Certificate cannot be exported.";
+                                throw new InvalidOperationException(message);
+                            }
+
                             logger.Debug("Trying to export encryption certificate...");
                             var certificatePath = Path.Combine(targetDirectory, package.Metadata.Id + "." + package.Metadata.Version + ".pfx");
 
