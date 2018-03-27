@@ -61,6 +61,9 @@ namespace PS.Build.Nuget.Types
                 Type = NugetEncryptionFileType.Direct
             };
 
+            var encryptedFileDirectory = Path.GetDirectoryName(encryptedFilePath);
+            encryptedFileDirectory.EnsureDirectoryExist();
+
             var compilationMode = filePath.GetCompilationMode();
             if (compilationMode == CompilationMode.CLR)
             {

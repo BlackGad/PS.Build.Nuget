@@ -1,15 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
+using System.Text;
 using NuGet.Frameworks;
 using NuGet.Packaging;
 using PS.Build.Extensions;
 using PS.Build.Nuget.Attributes.Base;
 using PS.Build.Nuget.Extensions;
+using PS.Build.Nuget.Shared.Extensions;
 using PS.Build.Nuget.Types;
 using PS.Build.Services;
 using PS.Build.Types;
@@ -202,7 +205,9 @@ namespace PS.Build.Nuget.Attributes
                     {
                         if (file.Encrypt)
                         {
+                            var sourceFilePathHash = Encoding.UTF8.GetBytes(file.Source).ComputeHashMD5();
                             var encryptedFilePath = Path.Combine(encryptionSession.EncryptedFilesDirectory,
+                                                                 sourceFilePathHash,
                                                                  Path.GetFileName(file.Source) ?? string.Empty);
 
                             var encryptionFile = encryptionSession.EncryptFile(file.Source, encryptedFilePath);
