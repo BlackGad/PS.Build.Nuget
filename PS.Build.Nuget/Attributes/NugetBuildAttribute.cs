@@ -206,6 +206,7 @@ namespace PS.Build.Nuget.Attributes
 
                     if (encryptionRequired)
                     {
+                        logger.Info("Some content in package require encryption. Adding build target to target package...");
                         var assembly = Assembly.GetExecutingAssembly();
 
                         var msbuildTarget = assembly.GetResourceString("MSBuildDecryptorTargetTemplate.txt")
@@ -223,6 +224,7 @@ namespace PS.Build.Nuget.Attributes
                         if (file != null)
                         {
                             files.Remove(file);
+                            logger.Info("Merging additional automatic decryption target with existing package targets.");
                             xTargets = XDocument.Load(file.Source).Root ?? xTargets;
                         }
 
@@ -242,6 +244,7 @@ namespace PS.Build.Nuget.Attributes
                     {
                         if (file.Encrypt)
                         {
+                            logger.Info($"Encrypting {file.Source} file.");
                             var sourceFilePathHash = Encoding.UTF8.GetBytes(file.Source).ComputeHashMD5();
                             var encryptedFilePath = Path.Combine(encryptionSession.EncryptedFilesDirectory,
                                                                  sourceFilePathHash,
@@ -251,6 +254,7 @@ namespace PS.Build.Nuget.Attributes
                             build.AddFiles(targetDirectory, encryptedFilePath, file.Destination);
 
                             encryptionFile.Origin = build.Files.LastOrDefault()?.Path;
+                            
                         }
                         else
                         {
