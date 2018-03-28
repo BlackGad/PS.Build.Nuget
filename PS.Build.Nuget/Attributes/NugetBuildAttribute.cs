@@ -4,9 +4,11 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
+using System.Xml.Linq;
 using NuGet.Frameworks;
 using NuGet.Packaging;
 using PS.Build.Extensions;
@@ -200,6 +202,41 @@ namespace PS.Build.Nuget.Attributes
                     }
 
                     var encryptionSession = new EncryptionSession(package.Metadata.Id, temporaryDirectory, package.X509Certificate);
+                    var encryptionRequired = files.Any(f => f.Encrypt);
+
+                    if (encryptionRequired)
+                    {
+                        var assembly = Assembly.GetExecutingAssembly();
+
+                        var msbuildTarget = assembly.GetResourceString("MSBuildDecryptorTargetTemplate.txt")
+                                                    .Replace("{PACKAGE}", package.Metadata.Id.Replace(".", string.Empty));
+
+                        var msbuildTargetsTemplate = assembly.GetResourceString("MSBuildTargetsTemplate.txt");
+
+                        var xTargets = XElement.Parse(msbuildTargetsTemplate);
+                        var xTarget = XElement.Parse(msbuildTarget);
+
+                        var expectedTargetsFilename = package.Metadata.Id + ".targets";
+                        var file = files.Where(f => f.Source.EndsWith(expectedTargetsFilename, StringComparison.InvariantCultureIgnoreCase))
+                                        .FirstOrDefault(f => f.Destination.ToLowerInvariant().Contains("build"));
+
+                        if (file != null)
+                        {
+                            files.Remove(file);
+                            xTargets = XDocument.Load(file.Source).Root ?? xTargets;
+                        }
+
+                        xTargets.Add(xTarget);
+
+                        var encryptedTargetPath = Path.Combine(encryptionSession.EncryptedFilesDirectory, package.Metadata.Id + ".targets");
+                        xTargets.Save(encryptedTargetPath, SaveOptions.OmitDuplicateNamespaces);
+
+                        files.Add(new NugetPackageFile
+                        {
+                            Source = encryptedTargetPath,
+                            Destination = "build"
+                        });
+                    }
 
                     foreach (var file in files)
                     {

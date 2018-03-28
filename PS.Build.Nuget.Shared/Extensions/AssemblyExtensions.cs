@@ -3,6 +3,8 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Text;
+using PS.Build.Nuget.Shared.Extensions;
 using PS.Build.Nuget.Shared.Sources;
 
 namespace PS.Build.Nuget.Extensions
@@ -68,6 +70,15 @@ namespace PS.Build.Nuget.Extensions
             {
                 if (intPtr != IntPtr.Zero) Marshal.FreeHGlobal(intPtr);
             }
+        }
+
+        public static string GetResourceString(this Assembly assembly, string resourceName, Encoding encoding = null)
+        {
+            if (assembly == null) throw new ArgumentNullException(nameof(assembly));
+            var name = assembly.ResolveResourceName(resourceName);
+            encoding = encoding ?? Encoding.UTF8;
+            var content = assembly.GetManifestResourceStream(name).ReadStream();
+            return encoding.GetString(content);
         }
 
         public static string ResolveResourceName(this Assembly assembly, string resourceName)

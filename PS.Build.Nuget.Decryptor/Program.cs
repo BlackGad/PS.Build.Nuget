@@ -16,18 +16,18 @@ namespace PS.Build.Nuget.Decryptor
         #region Static members
 
         public static X509CertificateSearch CertificatePackageConfigurationLoad(NugetEncryptionConfiguration encryptionConfiguration,
-                                                                                string certificateConfigurationLocation)
+                                                                                string certificateFilePath)
         {
-            var directSearch = !string.IsNullOrWhiteSpace(certificateConfigurationLocation);
+            var directSearch = !string.IsNullOrWhiteSpace(certificateFilePath);
             if (!directSearch)
             {
                 Console.WriteLine("Trying to search default configuration...");
-                certificateConfigurationLocation = Path.Combine(Environment.CurrentDirectory, "NuGet.Encryption.config");
+                certificateFilePath = Path.Combine(Environment.CurrentDirectory, "NuGet.Encryption.config");
             }
 
             try
             {
-                var file = new FileInfo(certificateConfigurationLocation);
+                var file = new FileInfo(certificateFilePath);
                 do
                 {
                     Console.WriteLine($"Trying to load configuration from {file.FullName}");
@@ -141,7 +141,8 @@ namespace PS.Build.Nuget.Decryptor
 
             if (!string.Equals(realHash, file.EncryptedHash, StringComparison.InvariantCultureIgnoreCase))
             {
-                throw new ArgumentException("File is corrupted");
+                Console.WriteLine("Hash file does not match neither encrypted nor normal.");
+                return;
             }
 
             byte[] encryptedContent;
@@ -159,11 +160,12 @@ namespace PS.Build.Nuget.Decryptor
             }
 
             Console.WriteLine("File is encrypted.");
-
             var decryptedContent = encryptedContent.DecryptAES(Encoding.UTF8.GetString(aesKey));
             var decryptedFilePath = filePath + ".decrypted";
+            Console.WriteLine("File was successfully decrypted.");
 
             File.WriteAllBytes(decryptedFilePath, decryptedContent);
+            Console.WriteLine($"Saving to intermediate path: {decryptedFilePath}");
 
             var decryptedHash = decryptedFilePath.ComputeHashMD5();
             if (!string.Equals(decryptedHash, file.OriginalHash, StringComparison.InvariantCultureIgnoreCase))
@@ -179,18 +181,21 @@ namespace PS.Build.Nuget.Decryptor
 
         public static int Main(string[] args)
         {
-            var configurationLocation = ParseArgument("-config", args) ??
+            var writer = new AggregatedStandardOutputWriter();
+            Console.SetOut(writer);
+
+            var configurationFilePath = ParseArgument("-config", args) ??
                                         Path.Combine(Environment.CurrentDirectory, "encryption.config");
 
-            var certificateLocation = ParseArgument("-certificate", args);
+            var certificateFilePath = ParseArgument("-certificate", args);
 
             try
             {
-                Console.WriteLine($"Loading configuration from {configurationLocation} file");
-                var configuration = ConfigurationLoad(configurationLocation);
+                Console.WriteLine($"Loading configuration from {configurationFilePath} file");
+                var configuration = ConfigurationLoad(configurationFilePath);
                 Console.WriteLine("Configuration loaded");
 
-                var configurationFolder = Path.GetDirectoryName(configurationLocation);
+                var configurationFolder = Path.GetDirectoryName(configurationFilePath);
                 if (configurationFolder == null) throw new InvalidOperationException();
 
                 var files = configuration.Files ?? Enumerable.Empty<NugetEncryptionFile>().ToList();
@@ -206,7 +211,7 @@ namespace PS.Build.Nuget.Decryptor
                 if (string.IsNullOrWhiteSpace(configuration.Metadata?.Key))
                     throw new ArgumentException("Configuration metadata encryption key corrupted");
 
-                var search = CertificatePackageConfigurationLoad(configuration, certificateLocation);
+                var search = CertificatePackageConfigurationLoad(configuration, certificateFilePath);
                 if (search == null)
                 {
                     Console.WriteLine("Package certificate configuration not found. Using default configuration.");
@@ -246,12 +251,34 @@ namespace PS.Build.Nuget.Decryptor
             catch (Exception e)
             {
                 Console.WriteLine("ERROR: " + e.GetBaseException().Message);
+
+                try
+                {
+                    File.WriteAllText(configurationFilePath + ".fail", writer.GetText());
+                }
+                catch (Exception error)
+                {
+                    Console.WriteLine("WARN: Could not save success file marker near configuration. Details: " + error.GetBaseException().Message);
+                }
+
                 return 1;
             }
             finally
             {
-                Console.WriteLine("Press any key to exit");
-                if (!args.Any(a => string.Equals(a, "-s", StringComparison.InvariantCultureIgnoreCase))) Console.ReadLine();
+                if (!args.Any(a => string.Equals(a, "-s", StringComparison.InvariantCultureIgnoreCase)))
+                {
+                    Console.WriteLine("Press any key to exit");
+                    Console.ReadLine();
+                }
+            }
+
+            try
+            {
+                File.WriteAllText(configurationFilePath + ".pass", writer.GetText());
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("WARN: Could not save success file marker near configuration. Details: " + e.GetBaseException().Message);
             }
 
             return 0;
