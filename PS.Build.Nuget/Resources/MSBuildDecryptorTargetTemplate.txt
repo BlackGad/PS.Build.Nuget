@@ -12,5 +12,5 @@
     </PropertyGroup>
     
     <Message Text="Package already decrypted" Condition="Exists('$(PassFilePath)')"/>
-    <Exec Command='"$(DecryptorPath)" -s -config "$(EncryptionConfigurationPath)"' WorkingDirectory='$(DecryptorDirectory)' Condition="!Exists('$(PassFilePath)')"/>
+    <Exec Command='"$(DecryptorPath)" -s -config "$(EncryptionConfigurationPath)"' WorkingDirectory='$(DecryptorDirectory)' Condition="!Exists('$(PassFilePath)')" IgnoreExitCode="true"/>
 </Target>
