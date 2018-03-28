@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using PS.Build.Nuget.Extensions;
@@ -149,12 +148,9 @@ namespace PS.Build.Nuget.Decryptor
             if (file.Type == NugetEncryptionFileType.ManifestResource)
             {
                 Console.WriteLine("Encrypted data stored inside manifest resource. Extracting...");
-                var fakeAssembly = Assembly.LoadFrom(filePath);
-                var resourceName = fakeAssembly.GetManifestResourceNames().FirstOrDefault();
-                if (string.IsNullOrWhiteSpace(resourceName)) throw new ArgumentException("Fake assembly does not contains any resources");
-                using (var stream = fakeAssembly.GetManifestResourceStream(resourceName))
+                using (var isolated = new Isolated<Unpacker>())
                 {
-                    encryptedContent = stream.ReadStream();
+                    encryptedContent = isolated.Value.Unpack(filePath);
                 }
             }
             else

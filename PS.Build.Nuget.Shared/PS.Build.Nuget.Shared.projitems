@@ -16,6 +16,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Extensions\X509Certificate2Extensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Sources\CompilationMode.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Sources\DelegateDisposable.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Sources\Isolated.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Sources\NugetCertificateConfiguration\NugetCertificateConfiguration.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Sources\NugetCertificateConfiguration\NugetCertificatePackage.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Sources\NugetEncryptionConfiguration\NugetEncryptionConfiguration.cs" />

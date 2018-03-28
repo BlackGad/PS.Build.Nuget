@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
@@ -52,20 +53,21 @@ namespace PS.Build.Nuget.Types
         /// <param name="encryptedFilePath">Encrypted file path</param>
         public NugetEncryptionFile EncryptFile(string filePath, string encryptedFilePath)
         {
-            var encryptedFileContent = File.ReadAllBytes(filePath).EncryptAES(EncryptionKey);
+            var sourceContent = File.ReadAllBytes(filePath);
+            var encryptedFileContent = sourceContent.EncryptAES(EncryptionKey);
 
             var encryptionFile = new NugetEncryptionFile
             {
                 EncryptedHash = encryptedFileContent.ComputeHashMD5(),
-                OriginalHash = filePath.ComputeHashMD5(),
+                OriginalHash = sourceContent.ComputeHashMD5(),
                 Type = NugetEncryptionFileType.Direct
             };
 
             var encryptedFileDirectory = Path.GetDirectoryName(encryptedFilePath);
             encryptedFileDirectory.EnsureDirectoryExist();
 
-            var compilationMode = filePath.GetCompilationMode();
-            if (compilationMode == CompilationMode.CLR)
+            var compilationMode = new FileInfo(filePath).GetCompilationMode();
+            if (compilationMode.HasFlag(CompilationMode.CLR))
             {
                 try
                 {
