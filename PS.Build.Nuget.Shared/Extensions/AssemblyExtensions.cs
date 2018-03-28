@@ -2,6 +2,7 @@
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using PS.Build.Nuget.Shared.Sources;
 
 namespace PS.Build.Nuget.Extensions
@@ -11,40 +12,62 @@ namespace PS.Build.Nuget.Extensions
         #region Static members
 
         /// <remarks>
-        ///     https://msdn.microsoft.com/en-us/library/c91d4yzb.aspx?f=255&MSPPError=-2147217396
+        ///     https://github.com/BlackGad/PS.FileStructureAnalyzer
         /// </remarks>
-        public static CompilationMode GetCompilationMode(this string filePath)
+        public static CompilationMode GetCompilationMode(this FileInfo info)
         {
-            var data = new byte[4096];
-            var file = new FileInfo(filePath);
-            if (!file.Exists) return CompilationMode.Invalid;
+            if (!info.Exists) throw new ArgumentException($"{info.FullName} does not exist");
 
-            using (var stream = file.Open(FileMode.Open, FileAccess.Read))
+            var intPtr = IntPtr.Zero;
+            try
             {
-                stream.Read(data, 0, data.Length);
+                uint unmanagedBufferSize = 4096;
+                intPtr = Marshal.AllocHGlobal((int)unmanagedBufferSize);
+
+                using (var stream = File.Open(info.FullName, FileMode.Open, FileAccess.Read))
+                {
+                    var bytes = new byte[unmanagedBufferSize];
+                    stream.Read(bytes, 0, bytes.Length);
+                    Marshal.Copy(bytes, 0, intPtr, bytes.Length);
+                }
+
+                //Check DOS header magic number
+                if (Marshal.ReadInt16(intPtr) != 0x5a4d) return CompilationMode.Invalid;
+
+                // This will get the address for the WinNT header  
+                var ntHeaderAddressOffset = Marshal.ReadInt32(intPtr + 60);
+
+                // Check WinNT header signature
+                var signature = Marshal.ReadInt32(intPtr + ntHeaderAddressOffset);
+                if (signature != 0x4550) return CompilationMode.Invalid;
+
+                //Determine file bitness by reading magic from IMAGE_OPTIONAL_HEADER
+                var magic = Marshal.ReadInt16(intPtr + ntHeaderAddressOffset + 24);
+
+                var result = CompilationMode.Invalid;
+                uint clrHeaderSize;
+                if (magic == 0x10b)
+                {
+                    clrHeaderSize = (uint)Marshal.ReadInt32(intPtr + ntHeaderAddressOffset + 24 + 208 + 4);
+                    result |= CompilationMode.Bit32;
+                }
+                else if (magic == 0x20b)
+                {
+                    clrHeaderSize = (uint)Marshal.ReadInt32(intPtr + ntHeaderAddressOffset + 24 + 224 + 4);
+                    result |= CompilationMode.Bit64;
+                }
+                else return CompilationMode.Invalid;
+
+                result |= clrHeaderSize != 0
+                    ? CompilationMode.CLR
+                    : CompilationMode.Native;
+
+                return result;
             }
-
-            // Verify this is a executable/dll  
-            if ((data[1] << 8 | data[0]) != 0x5a4d)
-                return CompilationMode.Invalid;
-
-            // This will get the address for the WinNT header  
-            var iWinNTHdr = data[63] << 24 | data[62] << 16 | data[61] << 8 | data[60];
-
-            // Verify this is an NT address  
-            if ((data[iWinNTHdr + 3] << 24 | data[iWinNTHdr + 2] << 16 | data[iWinNTHdr + 1] << 8 | data[iWinNTHdr]) != 0x00004550)
-                return CompilationMode.Invalid;
-
-            var iLightningAddr = iWinNTHdr + 24 + 208;
-            var iSum = 0;
-            var iTop = iLightningAddr + 8;
-
-            for (var i = iLightningAddr; i < iTop; ++i)
-                iSum |= data[i];
-
-            return iSum == 0
-                ? CompilationMode.Native
-                : CompilationMode.CLR;
+            finally
+            {
+                if (intPtr != IntPtr.Zero) Marshal.FreeHGlobal(intPtr);
+            }
         }
 
         public static string ResolveResourceName(this Assembly assembly, string resourceName)
