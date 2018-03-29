@@ -225,8 +225,8 @@ namespace PS.Build.Nuget.Decryptor
                 }
 
                 var certificate = search.Search().FirstOrDefault();
-                Console.WriteLine("Certificate found");
                 if (certificate == null) throw new ApplicationException("Could not find specified certificate");
+                Console.WriteLine("Certificate found");
 
                 if (!string.Equals(certificate.Thumbprint, configuration.Metadata.Certificate, StringComparison.InvariantCultureIgnoreCase))
                     throw new ApplicationException("Loaded certificate thumbprint differs from required by configuration");
