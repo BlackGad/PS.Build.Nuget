@@ -131,6 +131,7 @@ namespace PS.Build.Nuget.Extensions
         {
             if (provider == null) throw new ArgumentNullException(nameof(provider));
             if (string.IsNullOrWhiteSpace(id)) id = provider.GetService<IExplorer>().Properties[BuildProperty.TargetName];
+            id = provider.GetService<IMacroResolver>().Resolve(id);
 
             var vault = provider.GetService<IDynamicVault>();
             if (vault == null) throw new ArgumentNullException(nameof(vault));

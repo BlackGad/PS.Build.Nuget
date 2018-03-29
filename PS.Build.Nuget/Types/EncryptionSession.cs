@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
@@ -15,7 +16,7 @@ namespace PS.Build.Nuget.Types
     {
         #region Constructors
 
-        public EncryptionSession(string temporaryDirectory, X509Certificate2 certificate)
+        public EncryptionSession(string packageId, string temporaryDirectory, X509Certificate2 certificate)
         {
             EncryptionKey = Guid.NewGuid().ToString("N");
             EncryptedFilesDirectory = Path.Combine(temporaryDirectory, "__encrypted");
@@ -25,6 +26,7 @@ namespace PS.Build.Nuget.Types
             {
                 Metadata = new NugetEncryptionMetadata
                 {
+                    ID = packageId,
                     Certificate = certificate?.Thumbprint,
                     Key = certificate?.Encrypt(Encoding.UTF8.GetBytes(EncryptionKey)).ToHexString()
                 }
@@ -48,22 +50,24 @@ namespace PS.Build.Nuget.Types
         ///     Encrypt file
         /// </summary>
         /// <param name="filePath">Source file path</param>
-        /// <param name="fileOrigin">File origin in package</param>
         /// <param name="encryptedFilePath">Encrypted file path</param>
-        public void EncryptFile(string filePath, string fileOrigin, string encryptedFilePath)
+        public NugetEncryptionFile EncryptFile(string filePath, string encryptedFilePath)
         {
-            var encryptedFileContent = File.ReadAllBytes(filePath).EncryptAES(EncryptionKey);
+            var sourceContent = File.ReadAllBytes(filePath);
+            var encryptedFileContent = sourceContent.EncryptAES(EncryptionKey);
 
             var encryptionFile = new NugetEncryptionFile
             {
                 EncryptedHash = encryptedFileContent.ComputeHashMD5(),
-                OriginalHash = filePath.ComputeHashMD5(),
-                Origin = fileOrigin,
+                OriginalHash = sourceContent.ComputeHashMD5(),
                 Type = NugetEncryptionFileType.Direct
             };
 
-            var compilationMode = filePath.GetCompilationMode();
-            if (compilationMode == CompilationMode.CLR)
+            var encryptedFileDirectory = Path.GetDirectoryName(encryptedFilePath);
+            encryptedFileDirectory.EnsureDirectoryExist();
+
+            var compilationMode = new FileInfo(filePath).GetCompilationMode();
+            if (compilationMode.HasFlag(CompilationMode.CLR))
             {
                 try
                 {
@@ -89,14 +93,7 @@ namespace PS.Build.Nuget.Types
             }
 
             Configuration.Files.Add(encryptionFile);
-        }
-
-        public string ProduceEncryptedFilePath(string filePath)
-        {
-            var sourceFilename = Path.GetFileName(filePath);
-            // ReSharper disable once AssignNullToNotNullAttribute
-            var encryptedFilePath = Path.Combine(EncryptedFilesDirectory, sourceFilename);
-            return encryptedFilePath;
+            return encryptionFile;
         }
 
         public string SaveConfiguration()

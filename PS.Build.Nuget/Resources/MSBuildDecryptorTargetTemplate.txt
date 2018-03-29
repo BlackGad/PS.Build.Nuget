@@ -1,0 +1,16 @@
+<Target Name="{PACKAGE} decryption" BeforeTargets="CoreCompile" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+      <DecryptorDirectory>$(MSBuildThisFileDirectory)..\</DecryptorDirectory>
+      <DecryptorPath>$(DecryptorDirectory)decryptor.exe</DecryptorPath>
+      <EncryptionConfigurationPath>$(DecryptorDirectory)encryption.config</EncryptionConfigurationPath>
+      <PassFilePath>$(EncryptionConfigurationPath).pass</PassFilePath>
+    </PropertyGroup>
+    
+    <PropertyGroup Condition="Exists('$(PassFilePath)')">
+        <PackageDecryptedConstant>$([System.IO.Path]::GetFileNameWithoutExtension('$(MSBuildThisFile)').Replace('.', ''))PackageDecrypted</PackageDecryptedConstant>
+        <DefineConstants>$(DefineConstants);$(PackageDecryptedConstant)</DefineConstants>
+    </PropertyGroup>
+    
+    <Message Text="Package already decrypted" Condition="Exists('$(PassFilePath)')"/>
+    <Exec Command='"$(DecryptorPath)" -s -config "$(EncryptionConfigurationPath)"' WorkingDirectory='$(DecryptorDirectory)' Condition="!Exists('$(PassFilePath)')" IgnoreExitCode="true"/>
+</Target>

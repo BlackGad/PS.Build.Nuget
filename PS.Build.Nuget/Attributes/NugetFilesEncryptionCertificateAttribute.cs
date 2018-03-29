@@ -1,6 +1,5 @@
 using System;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -23,7 +22,7 @@ namespace PS.Build.Nuget.Attributes
         private readonly string _assemblyFilePath;
         private readonly string _certificateFilePath;
         private readonly X509FindType _findType;
-        private readonly object _findValue;
+        private readonly string _findValue;
         private readonly string _password;
         private readonly string _resourceName;
 
@@ -33,7 +32,7 @@ namespace PS.Build.Nuget.Attributes
 
         #region Constructors
 
-        public NugetFilesEncryptionCertificateAttribute(StoreLocation storeLocation, StoreName storeName, X509FindType findType, object findValue)
+        public NugetFilesEncryptionCertificateAttribute(StoreLocation storeLocation, StoreName storeName, X509FindType findType, string findValue)
         {
             _storeLocation = storeLocation;
             _storeName = storeName;
@@ -84,40 +83,50 @@ namespace PS.Build.Nuget.Attributes
 
             try
             {
-                logger.Debug("Searching security certificate");
+                logger.Info("Searching security certificate");
                 var package = provider.GetVaultPackage(ID);
 
-                IX509CertificateSearch search = null;
+                X509CertificateSearch search = null;
                 if (_searchType == typeof(X509CertificateManifestResourceSearch))
                 {
+                    var resolvedAssemblyFilePath = resolver.Resolve(_assemblyFilePath);
+                    var resolvedResourceName = resolver.Resolve(_resourceName);
+
+                    logger.Info($"Searching certificate in {_assemblyFilePath} assembly resource with {resolvedResourceName} name.");
+
                     search = new X509CertificateManifestResourceSearch
                     {
-                        Assembly = Assembly.LoadFile(resolver.Resolve(_assemblyFilePath)),
-                        ResourceName = resolver.Resolve(_resourceName),
+                        Assembly = Assembly.LoadFile(resolvedAssemblyFilePath),
+                        ResourceName = resolvedResourceName,
                         Password = _password
                     };
                 }
                 else if (_searchType == typeof(X509CertificateFileSearch))
                 {
-                    var path = resolver.Resolve(_certificateFilePath);
-                    if (!File.Exists(path))
+                    var resolvedCertificateFilePath = resolver.Resolve(_certificateFilePath);
+
+                    logger.Info($"Searching certificate by path {resolvedCertificateFilePath}.");
+
+                    if (!File.Exists(resolvedCertificateFilePath))
                     {
                         var newCertificate = X509Certificate2CreateExtensions.CreateSelfSignedCertificate("CN=" + package.Metadata.Id, "CN=PS.Build.Nuget");
                         var bytes = string.IsNullOrWhiteSpace(_password)
                             ? newCertificate.Export(X509ContentType.Pfx)
                             : newCertificate.Export(X509ContentType.Pfx, _password);
 
-                        File.WriteAllBytes(path, bytes);
+                        File.WriteAllBytes(resolvedCertificateFilePath, bytes);
                     }
 
                     search = new X509CertificateFileSearch
                     {
-                        SourceFile = path,
+                        SourceFile = resolvedCertificateFilePath,
                         Password = _password
                     };
                 }
                 else if (_searchType == typeof(X509CertificateStorageSearch))
                 {
+                    logger.Info($"Searching certificate in {_storeLocation}.{_storeName} storage where {_findType} criteria is {_findValue}.");
+
                     search = new X509CertificateStorageSearch
                     {
                         StoreLocation = _storeLocation,
@@ -136,7 +145,7 @@ namespace PS.Build.Nuget.Attributes
             }
             catch (Exception e)
             {
-                logger.Error("Package file definition failed. Details: " + e.GetBaseException().Message);
+                logger.Error("Security certificate was not found. Details: " + e.GetBaseException().Message);
             }
         }
 

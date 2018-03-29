@@ -1,14 +1,20 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Reflection;
+using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
+using System.Text;
+using System.Xml.Linq;
 using NuGet.Frameworks;
 using NuGet.Packaging;
 using PS.Build.Extensions;
 using PS.Build.Nuget.Attributes.Base;
 using PS.Build.Nuget.Extensions;
+using PS.Build.Nuget.Shared.Extensions;
 using PS.Build.Nuget.Types;
 using PS.Build.Services;
 using PS.Build.Types;
@@ -195,15 +201,60 @@ namespace PS.Build.Nuget.Attributes
                         throw new InvalidOperationException(message);
                     }
 
-                    var encryptionSession = new EncryptionSession(temporaryDirectory, package.X509Certificate);
+                    var encryptionSession = new EncryptionSession(package.Metadata.Id, temporaryDirectory, package.X509Certificate);
+                    var encryptionRequired = files.Any(f => f.Encrypt);
+
+                    if (encryptionRequired)
+                    {
+                        logger.Info("Some content in package require encryption. Adding build target to target package...");
+                        var assembly = Assembly.GetExecutingAssembly();
+
+                        var msbuildTarget = assembly.GetResourceString("MSBuildDecryptorTargetTemplate.txt")
+                                                    .Replace("{PACKAGE}", package.Metadata.Id.Replace(".", string.Empty));
+
+                        var msbuildTargetsTemplate = assembly.GetResourceString("MSBuildTargetsTemplate.txt");
+
+                        var xTargets = XElement.Parse(msbuildTargetsTemplate);
+                        var xTarget = XElement.Parse(msbuildTarget);
+
+                        var expectedTargetsFilename = package.Metadata.Id + ".targets";
+                        var file = files.Where(f => f.Source.EndsWith(expectedTargetsFilename, StringComparison.InvariantCultureIgnoreCase))
+                                        .FirstOrDefault(f => f.Destination.ToLowerInvariant().Contains("build"));
+
+                        if (file != null)
+                        {
+                            files.Remove(file);
+                            logger.Info("Merging additional automatic decryption target with existing package targets.");
+                            xTargets = XDocument.Load(file.Source).Root ?? xTargets;
+                        }
+
+                        xTargets.Add(xTarget);
+
+                        var encryptedTargetPath = Path.Combine(encryptionSession.EncryptedFilesDirectory, package.Metadata.Id + ".targets");
+                        xTargets.Save(encryptedTargetPath, SaveOptions.OmitDuplicateNamespaces);
+
+                        files.Add(new NugetPackageFile
+                        {
+                            Source = encryptedTargetPath,
+                            Destination = "build"
+                        });
+                    }
 
                     foreach (var file in files)
                     {
                         if (file.Encrypt)
                         {
-                            var encryptedFilePath = encryptionSession.ProduceEncryptedFilePath(file.Source);
+                            logger.Info($"Encrypting {file.Source} file.");
+                            var sourceFilePathHash = Encoding.UTF8.GetBytes(file.Source).ComputeHashMD5();
+                            var encryptedFilePath = Path.Combine(encryptionSession.EncryptedFilesDirectory,
+                                                                 sourceFilePathHash,
+                                                                 Path.GetFileName(file.Source) ?? string.Empty);
+
+                            var encryptionFile = encryptionSession.EncryptFile(file.Source, encryptedFilePath);
                             build.AddFiles(targetDirectory, encryptedFilePath, file.Destination);
-                            encryptionSession.EncryptFile(file.Source, build.Files.LastOrDefault()?.Path, encryptedFilePath);
+
+                            encryptionFile.Origin = build.Files.LastOrDefault()?.Path;
+                            
                         }
                         else
                         {
@@ -222,6 +273,20 @@ namespace PS.Build.Nuget.Attributes
 
                         if (package.X509CertificateExport)
                         {
+                            logger.Debug("Exporting encryption certificate...");
+                            var cryptoProvider = package.X509Certificate.PrivateKey as RSACryptoServiceProvider;
+                            if (cryptoProvider == null)
+                            {
+                                var message = "Certificate private key is unavailable. Certificate cannot be exported.";
+                                throw new InvalidOperationException(message);
+                            }
+
+                            if (!cryptoProvider.CspKeyContainerInfo.Exportable)
+                            {
+                                var message = "Encryption certificate is not exportable. Certificate cannot be exported.";
+                                throw new InvalidOperationException(message);
+                            }
+
                             logger.Debug("Trying to export encryption certificate...");
                             var certificatePath = Path.Combine(targetDirectory, package.Metadata.Id + "." + package.Metadata.Version + ".pfx");
 

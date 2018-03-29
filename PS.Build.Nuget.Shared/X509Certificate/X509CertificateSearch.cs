@@ -6,7 +6,7 @@ namespace PS.Build.Nuget.X509Certificate
     {
         #region Members
 
-        protected abstract X509Certificate2[] Search();
+        public abstract X509Certificate2[] Search();
 
         #endregion
     }
