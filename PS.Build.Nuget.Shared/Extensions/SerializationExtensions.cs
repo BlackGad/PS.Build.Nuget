@@ -17,13 +17,24 @@ namespace PS.Build.Nuget.Shared.Extensions
             }
         }
 
-        public static void SaveXml<T>(this T file, string path)
+        public static void SaveXml<T>(this T instance, string path)
         {
             var serializer = new XmlSerializer(typeof(T));
 
             using (var writer = new StreamWriter(path))
             {
-                serializer.Serialize(writer, file);
+                serializer.Serialize(writer, instance);
+            }
+        }
+
+        public static string SerializeXml<T>(this T instance)
+        {
+            var serializer = new XmlSerializer(typeof(T));
+
+            using (var textWriter = new StringWriter())
+            {
+                serializer.Serialize(textWriter, instance);
+                return textWriter.ToString();
             }
         }
 

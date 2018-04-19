@@ -184,6 +184,58 @@ namespace PS.Build.Nuget.Decryptor
             var writer = new AggregatedStandardOutputWriter();
             Console.SetOut(writer);
 
+            if (string.Equals(args.FirstOrDefault(), "example", StringComparison.InvariantCultureIgnoreCase))
+            {
+                Console.WriteLine("Certificate search configuration example:");
+
+                var template = new NugetCertificateConfiguration
+                {
+                    Packages = new List<NugetCertificatePackage>
+                    {
+                        new NugetCertificatePackage
+                        {
+                            ID = "nuget.package.id.1",
+                            Search = new X509CertificateFileSearch
+                            {
+                                SourceFile = @"c:\certificate.pfx",
+                                Password = "password"
+                            }
+                        },
+                        new NugetCertificatePackage
+                        {
+                            ID = "nuget.package.id.2",
+                            Search = new X509CertificateManifestResourceSearch
+                            {
+                                SourceAssembly = @"c:\assembly.dll",
+                                ResourceName = "manifest.resource.name.pfx",
+                                Password = "password"
+                            }
+                        },
+                        new NugetCertificatePackage
+                        {
+                            ID = "nuget.package.id.3",
+                            Search = new X509CertificateStorageSearch
+                            {
+                                StoreLocation = StoreLocation.LocalMachine,
+                                StoreName = StoreName.My,
+                                FindValue = "cert thumbprint",
+                                FindType = X509FindType.FindByThumbprint
+                            }
+                        }
+                    }
+                };
+
+                Console.WriteLine(template.SerializeXml());
+
+                if (!args.Any(a => string.Equals(a, "-s", StringComparison.InvariantCultureIgnoreCase)))
+                {
+                    Console.WriteLine("Press any key to exit");
+                    Console.ReadLine();
+                }
+
+                return 0;
+            }
+
             var configurationFilePath = ParseArgument("-config", args) ??
                                         Path.Combine(Environment.CurrentDirectory, "encryption.config");
 
